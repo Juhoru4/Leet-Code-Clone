@@ -1,0 +1,65 @@
+'Herramienta usada: PlantUML
+
+@startuml
+hide footbox
+title Plataforma Online Judge USB - Diagrama de Secuencia (Envio y Evaluacion)
+
+autonumber
+
+actor Programador
+participant "Frontend\n(Next.js)" as Frontend
+participant "Backend API\n(Django DRF)" as API
+participant "SubmissionService" as SubmissionService
+participant "DB\n(PostgreSQL/Supabase)" as DB
+participant "CodeExecutionService" as ExecService
+participant "Sandbox Docker" as Sandbox
+
+Programador -> Frontend: Escribe codigo y presiona "Enviar"
+Frontend -> API: POST /api/submissions/\n{problem_id, lenguaje, codigo}
+
+API -> API: Validar JWT y payload
+alt Request invalido o no autorizado
+  API --> Frontend: 400/401 error
+  Frontend --> Programador: Mostrar mensaje de error
+else Request valido
+  API -> DB: Consultar problema + test cases
+  DB --> API: Problema y casos
+
+  API -> SubmissionService: submitCode(usuarioId, problemaId, lenguaje, codigo)
+  SubmissionService -> DB: Crear Envio(estado=pending/running)
+  DB --> SubmissionService: envioId
+
+  loop Por cada caso de prueba
+    SubmissionService -> ExecService: execute(codigo, lenguaje, entrada, limites)
+    ExecService -> Sandbox: Ejecutar codigo aislado
+    Sandbox --> ExecService: stdout, stderr, exitCode, tiempo, memoria
+
+    alt Compilacion error
+      ExecService --> SubmissionService: resultado(compilation_error)
+      SubmissionService -> DB: Guardar ResultadoEnvio fallo
+      break Fin anticipado
+    else Runtime error
+      ExecService --> SubmissionService: resultado(runtime_error)
+      SubmissionService -> DB: Guardar ResultadoEnvio fallo
+    else Timeout
+      ExecService --> SubmissionService: resultado(time_limit_exceeded)
+      SubmissionService -> DB: Guardar ResultadoEnvio fallo
+    else Salida incorrecta
+      ExecService --> SubmissionService: resultado(wrong_answer)
+      SubmissionService -> DB: Guardar ResultadoEnvio fallo
+    else Salida correcta
+      ExecService --> SubmissionService: resultado(accepted)
+      SubmissionService -> DB: Guardar ResultadoEnvio ok
+    end
+  end
+
+  SubmissionService -> SubmissionService: calculateFinalStatus(resultados)
+  SubmissionService -> DB: Actualizar Envio(estado final, metricas)
+  DB --> SubmissionService: Envio actualizado
+
+  SubmissionService --> API: Resumen + resultados por caso
+  API --> Frontend: 201 Created + payload
+  Frontend --> Programador: Mostrar veredicto y detalle
+end
+
+@enduml

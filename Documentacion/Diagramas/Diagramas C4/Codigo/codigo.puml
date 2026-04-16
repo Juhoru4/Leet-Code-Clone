@@ -1,0 +1,193 @@
+'Este diagrama fue realizado en: https://plantuml.com/es/
+
+@startuml
+hide circle
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+
+skinparam class {
+  BackgroundColor<<entity>> #EAF7FF
+  BorderColor<<entity>> #1B6CA8
+  BackgroundColor<<service>> #EFFFF2
+  BorderColor<<service>> #1F8B4C
+  BackgroundColor<<dataclass>> #FFF7E8
+  BorderColor<<dataclass>> #C27A00
+  BackgroundColor<<enum>> #F3F3F3
+  BorderColor<<enum>> #666666
+}
+
+title Plataforma leetcode - Diagrama de clases
+
+
+package "Auth" {
+  class AuthUser <<(E,#4EA8DE) entity>> {
+    +id: UUID
+    +correoElectronico: String
+    +contrasenaEncriptada: String
+    +creadoEl: DateTime
+    +ultimoInicioSesion: DateTime
+  }
+
+  class Perfil <<(E,#4EA8DE) entity>> {
+    +id: UUID
+    +nombreUsuario: String
+    +nombreCompleto: String
+    +rol: RolUsuario
+    +creadoEl: DateTime
+    +actualizadoEl: DateTime
+    +esAdmin(): bool
+  }
+}
+
+package "CatalogoProblemas" {
+  class Categoria <<(E,#4EA8DE) entity>> {
+    +id: UUID
+    +nombre: String
+    +slug: String
+    +descripcion: String
+    +creadoEl: DateTime
+  }
+
+  class Problema <<(E,#4EA8DE) entity>> {
+    +id: UUID
+    +titulo: String
+    +descripcion: Text
+    +dificultad: Dificultad
+    +restricciones: Text
+    +ejemploEntrada: Text
+    +ejemploSalida: Text
+    +limiteTiempoMs: int
+    +limiteMemoriaMb: int
+    +estaActivo: bool
+    +creadoEl: DateTime
+    +actualizadoEl: DateTime
+  }
+
+  class CasoPrueba <<(E,#4EA8DE) entity>> {
+    +id: UUID
+    +entrada: Text
+    +salidaEsperada: Text
+    +descripcion: String
+    +esPublico: bool
+    +orden: int
+    +creadoEl: DateTime
+  }
+}
+
+package "EnviosYEvaluacion" {
+  class Envio <<(E,#4EA8DE) entity>> {
+    +id: UUID
+    +lenguaje: Lenguaje
+    +codigoFuente: Text
+    +estado: EstadoEnvio
+    +totalCasos: int
+    +casosPasados: int
+    +tiempoEjecucionMs: int
+    +memoriaUsadaKb: int
+    +mensajeError: Text
+    +enviadoEl: DateTime
+  }
+
+  class ResultadoEnvio <<(E,#4EA8DE) entity>> {
+    +id: UUID
+    +estado: EstadoCaso
+    +salidaReal: Text
+    +tiempoEjecucionMs: int
+    +mensajeError: Text
+    +creadoEl: DateTime
+  }
+}
+
+package "ServiciosAplicacion" {
+  class SubmissionService <<(S,#52B788) service>> {
+    +submitCode(usuarioId: UUID, problemaId: UUID, lenguaje: Lenguaje, codigo: Text): Envio
+    +executePreview(usuarioId: UUID, problemaId: UUID, lenguaje: Lenguaje, codigo: Text): List<ResultadoEnvio>
+    +getSubmissionHistory(usuarioId: UUID, problemaId: UUID): List<Envio>
+    +calculateFinalStatus(resultados: List<ResultadoEnvio>): EstadoEnvio
+  }
+
+  class CodeExecutionService <<(S,#52B788) service>> {
+    +execute(codigo: Text, lenguaje: Lenguaje, entrada: Text, timeLimitMs: int, memoryLimitMb: int): ResultadoEjecucion
+    +runAgainstTestCases(codigo: Text, lenguaje: Lenguaje, casos: List<CasoPrueba>): List<ResultadoEjecucion>
+  }
+
+  class ResultadoEjecucion <<(D,#F4A261) dataclass>> {
+    +stdout: Text
+    +stderr: Text
+    +exitCode: int
+    +executionTimeMs: int
+    +timedOut: bool
+    +error: String
+  }
+}
+
+' ENUMS
+enum RolUsuario <<(N,#9E9E9E) enum>> {
+  estudiante
+  admin
+}
+
+enum Dificultad <<(N,#9E9E9E) enum>> {
+  facil
+  medio
+  dificil
+}
+
+enum Lenguaje <<(N,#9E9E9E) enum>> {
+  python
+  java
+  c
+  cpp
+  javascript
+}
+
+enum EstadoEnvio <<(N,#9E9E9E) enum>> {
+  pending
+  running
+  accepted
+  wrong_answer
+  compilation_error
+  runtime_error
+  time_limit_exceeded
+}
+
+enum EstadoCaso <<(N,#9E9E9E) enum>> {
+  accepted
+  wrong_answer
+  runtime_error
+  time_limit_exceeded
+}
+
+' Relaciones
+AuthUser "1" *-- "1" Perfil : tiene
+
+Perfil "1" --> "0..*" Problema : autor
+Problema "1" --> "1" Perfil : creadoPor
+
+Categoria "1" <-- "0..*" Problema : clasifica
+
+Problema "1" *-- "1..*" CasoPrueba : posee
+
+Perfil "1" --> "0..*" Envio : realiza
+Problema "1" --> "0..*" Envio : recibe
+
+Envio "1" *-- "1..*" ResultadoEnvio : detalla
+ResultadoEnvio "0..*" --> "1" CasoPrueba : correspondeA
+
+' Dependencias a enums
+Perfil ..> RolUsuario
+Problema ..> Dificultad
+Envio ..> Lenguaje
+Envio ..> EstadoEnvio
+ResultadoEnvio ..> EstadoCaso
+
+' Servicios
+SubmissionService ..> Envio
+SubmissionService ..> ResultadoEnvio
+SubmissionService ..> Problema
+SubmissionService ..> CodeExecutionService
+
+CodeExecutionService ..> CasoPrueba
+CodeExecutionService ..> ResultadoEjecucion
+
+@enduml
