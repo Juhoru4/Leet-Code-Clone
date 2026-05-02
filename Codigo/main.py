@@ -1,10 +1,12 @@
 from app import create_app
 from app.extensions import db
 from models import Usuario, Categoria, Problema, Envio, ResultadoEnvio, CasoPrueba
+from routes.ejecucion_endpoint import ejecucion_bp
 import os
 
 # Crear la aplicación
 app = create_app()
+app.register_blueprint(ejecucion_bp)
 
 
 @app.shell_context_processor

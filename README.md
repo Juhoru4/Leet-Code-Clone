@@ -46,11 +46,7 @@ Este paso solo se hace una vez. Las imágenes permiten ejecutar código en Pytho
 docker pull python:3.11-slim
 docker pull eclipse-temurin:17-jdk
 docker pull gcc:13
-```
 
-> ⚠️ Este paso puede tardar varios minutos dependiendo de tu conexión a internet.
-
----
 
 ## Cómo correr el proyecto
 
