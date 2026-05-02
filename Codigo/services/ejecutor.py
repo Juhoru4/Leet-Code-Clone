@@ -4,6 +4,7 @@
 import subprocess
 import tempfile
 import os
+import re
 
 #Configuración por lenguaje:
 LENGUAJES = {
@@ -25,13 +26,54 @@ LENGUAJES = {
 }
 
 
+# Patrones que identifican errores de compilación por lenguaje
+PATRONES_COMPILACION = {
+    "python": [],
+    "java": [
+        "error:",
+        "cannot find symbol",
+        "reached end of file",
+        "illegal start of expression",
+    ],
+    "cpp": [
+        "error:",
+        "expected",
+        "undeclared",
+        "no match for",
+    ],
+}
+
+def es_error_compilacion(stderr: str, lenguaje: str) -> bool:
+    
+    #identifica si es un error de compilacion
+
+    patrones = PATRONES_COMPILACION.get(lenguaje, [])
+    stderr_lower = stderr.lower()
+    return any(patron in stderr_lower for patron in patrones)
+
+def limpiar_mensaje_error(stderr: str) -> str:
+    lineas = stderr.strip().splitlines()
+    limpias = []
+    
+    for linea in lineas:
+
+        linea = linea.replace("/code/", "")
+
+        if re.match(r"^\s+at\s+\w+", linea):
+            continue
+
+        if re.match(r"^\d+ error(s)?$", linea.strip()):
+            continue
+
+        if linea.strip():
+            limpias.append(linea)
+
+    return "\n".join(limpias)
+
 
 def ejecutar_codigo(codigo: str, lenguaje: str) -> dict:
-    
-    """
-    Recibe el código del usuario y el lenguaje.
-    Devuelve un dict con: output, error, y si hubo tiempo_limite.
-    """
+
+    #Recibe el código del usuario y el lenguaje, devuelve un dict con: output, error, y si se acabo el tiempo limite.
 
     config = LENGUAJES.get(lenguaje)
     if not config:
@@ -61,35 +103,60 @@ def ejecutar_codigo(codigo: str, lenguaje: str) -> dict:
                 comando_docker,
                 capture_output=True,
                 text=True,
-                timeout=5
+                timeout=3
             )
+
+            #si hubo errores se clasifica qué tipo de error es
+            if resultado.stderr:
+                mensaje_limpio = limpiar_mensaje_error(resultado.stderr)
+
+                if es_error_compilacion(resultado.stderr, lenguaje):
+                    return {
+                        "output": "",
+                        "error": mensaje_limpio,
+                        "tipo_error": "compilacion",
+                        "supero_tiempo_limite": False
+                    }
+                else:
+                    return {
+                        "output": resultado.stdout,
+                        "error": mensaje_limpio,
+                        "tipo_error": "ejecucion",
+                        "supero_tiempo_limite": False
+                    }
+
+            #sin errores
             return {
                 "output": resultado.stdout,
-                "error": resultado.stderr,
-                "tiempo_limite": False
+                "error": "",
+                "tipo_error": None,
+                "supero_tiempo_limite": False
             }
 
+        #se exedio el limite del tiempo
         except subprocess.TimeoutExpired:
             return {
                 "output": "",
-                "error": "Tiempo límite excedido (5 segundos)",
-                "tiempo_limite": True
+                "error": "Tiempo límite excedido (3 segundos)",
+                "supero_tiempo_limite": True
             }
         
+        #error al crear el contenedor
+        except FileNotFoundError:
+            #Docker no está instalado o no está en el PATH
+            return {
+                "stdout": "",
+                "stderr": "El sistema de ejecución no está disponible. Contacta al administrador.",
+                "tipo_error": "sistema",
+                "timeout": False
+            }
 
-"""
-Para llamar y ejecutar, ejemplo:
-
-from services.ejecutor import ejecutar_codigo
-
-codigo = "print(10)"
-
-resultado = ejecutar_codigo(codigo, "python")
-
-if resultado.get("tiempo_limite"):
-    print("⏱ Tu código tardó demasiado")
-elif resultado["error"]:
-    print("❌ Error:", resultado["error"])
-else:
-    print("✅ Salida:", resultado["output"])
-"""
+        except Exception:
+            #Cualquier otro fallo relacionado con el contenedor
+            return {
+                "stdout": "",
+                "stderr": "Ocurrió un error al preparar el entorno de ejecución. Intenta de nuevo.",
+                "tipo_error": "sistema",
+                "timeout": False
+            }
+        
