@@ -80,7 +80,7 @@ def ejecutar_codigo(codigo: str, lenguaje: str) -> dict:
 """
 Para llamar y ejecutar, ejemplo:
 
-from services.executor import ejecutar_codigo
+from services.ejecutor import ejecutar_codigo
 
 codigo = "print(10)"
 
