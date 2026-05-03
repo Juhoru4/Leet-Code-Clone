@@ -18,7 +18,7 @@ def create_app(database_uri=None):
 
     db.init_app(app)
 
-    # Registrar blueprints - Supabase Auth
+    # Registrar blueprints si existen - Supabase Auth
     try:
         from Codigo.app.auth import bp as auth_bp
         app.register_blueprint(auth_bp)

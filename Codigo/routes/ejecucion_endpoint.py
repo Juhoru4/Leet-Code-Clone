@@ -1,9 +1,10 @@
 import uuid
 from threading import Lock
-from flask import Blueprint, request, jsonify, session, render_template
+from flask import Blueprint, request, jsonify, session, render_template, g
 from services.ejecutor import ejecutar_codigo
 from app.extensions import db
 from models.envio import Envio
+from Codigo.app.auth import require_auth
 
 ejecucion_bp = Blueprint("ejecucion", __name__)
 _ejecuciones_activas = set()
@@ -24,7 +25,9 @@ def ver_ejecutar():
     return render_template("problema.html")
 
 @ejecucion_bp.route("/ejecutar", methods=["POST"])
+@require_auth
 def ejecutar():
+    """Ejecuta código con autenticación Supabase."""
     datos = request.get_json()
 
     codigo      = datos.get("codigo", "")
@@ -34,11 +37,8 @@ def ejecutar():
     if not codigo or not lenguaje or not problema_id:
         return jsonify({"error": "Faltan datos"}), 400
 
-    # Cuando el login esté listo reemplaza esto por:
-    # usuario_id = session.get("usuario_id")
-    # if not usuario_id:
-    #     return jsonify({"error": "No autenticado"}), 401
-    usuario_id = "00000000-0000-0000-0000-000000000001"  # ← temporal
+    # Obtener usuario_id desde g.current_user (del decorador require_auth)
+    usuario_id = g.current_user.id
 
     with _lock_ejecuciones:
         if usuario_id in _ejecuciones_activas:
