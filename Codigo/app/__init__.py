@@ -6,15 +6,19 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-def create_app():
+def create_app(database_uri=None):
     app = Flask(__name__)
 
-    app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv(
+    app.config["SQLALCHEMY_DATABASE_URI"] = database_uri or os.getenv(
         "SESSION_POOLER_URL",
         os.getenv("DATABASE_URL")
     )
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
     db.init_app(app)
+
+    # Registrar blueprints en el factory para que existan en app real y tests.
+    from routes.ejecucion_endpoint import ejecucion_bp
+    app.register_blueprint(ejecucion_bp)
 
     return app

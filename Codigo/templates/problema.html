@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Resolver problema</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+
+        .contenedor { display: flex; gap: 20px; height: 80vh; }
+
+        .panel-problema { width: 40%; overflow-y: auto; }
+
+        .panel-editor { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+
+        textarea { flex: 1; width: 100%; font-family: monospace; font-size: 14px; padding: 8px; resize: none; }
+
+        select, button { padding: 6px 12px; font-size: 14px; }
+
+        #resultado { background: #f4f4f4; padding: 10px; min-height: 80px; white-space: pre-wrap; font-family: monospace; font-size: 13px; }
+
+        .correcto   { color: green; }
+        .error      { color: red; }
+        .advertencia{ color: orange; }
+    </style>
+</head>
+<body>
+
+<h2>Suma de dos números <span style="color:green; font-size:14px;">Fácil</span></h2>
+<hr>
+
+<div class="contenedor">
+
+    <div class="panel-problema">
+        <p>Dado dos números enteros <strong>a</strong> y <strong>b</strong>, retorna su suma.</p>
+        <p><strong>Ejemplo:</strong><br>
+        Input: a = 3, b = 5<br>
+        Output: 8</p>
+    </div>
+
+    <div class="panel-editor">
+        <div>
+            <select id="selector-lenguaje">
+                <option value="python">Python</option>
+                <option value="java">Java</option>
+                <option value="cpp">C++</option>
+            </select>
+            <button onclick="ejecutar()" id="btn-ejecutar">▶ Ejecutar</button>
+        </div>
+
+        <textarea id="editor" placeholder="Escribe tu solución aquí..."></textarea>
+
+        <div>
+            <strong>Resultado:</strong>
+            <div id="resultado">Ejecuta tu código para ver el resultado.</div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    async function ejecutar() {
+        const codigo = document.getElementById("editor").value;
+        const lenguaje = document.getElementById("selector-lenguaje").value;
+        const btn = document.getElementById("btn-ejecutar");
+        const resultadoDiv = document.getElementById("resultado");
+
+        if (!codigo.trim()) {
+            resultadoDiv.className = "advertencia";
+            resultadoDiv.textContent = "⚠ Escribe algún código antes de ejecutar.";
+            return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = "⏳ Ejecutando...";
+        resultadoDiv.className = "";
+        resultadoDiv.textContent = "Ejecutando...";
+
+        try {
+            const response = await fetch("/ejecutar", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ codigo, lenguaje })
+            });
+
+            const resultado = await response.json();
+            mostrarResultado(resultado);
+
+        } catch (e) {
+            resultadoDiv.className = "error";
+            resultadoDiv.textContent = "❌ No se pudo conectar con el servidor.";
+        } finally {
+            btn.disabled = false;
+            btn.textContent = "▶ Ejecutar";
+        }
+    }
+
+    function mostrarResultado(resultado) {
+        const div = document.getElementById("resultado");
+
+        if (resultado.timeout) {
+            div.className = "advertencia";
+            div.textContent = "⏱ Tiempo límite excedido. Revisa si tienes un bucle infinito.";
+        } else if (resultado.tipo_error === "compilacion") {
+            div.className = "error";
+            div.textContent = "🔴 Error de compilación:\n\n" + resultado.stderr;
+        } else if (resultado.tipo_error === "ejecucion") {
+            div.className = "error";
+            div.textContent = "🟠 Error de ejecución:\n\n" + resultado.stderr;
+        } else if (resultado.tipo_error === "sistema") {
+            div.className = "error";
+            div.textContent = "⚙️ " + resultado.stderr;
+        } else {
+            div.className = "correcto";
+            div.textContent = "✅ Correcto:\n\n" + (resultado.stdout || "(sin salida)");
+        }
+    }
+</script>
+
+</body>
+</html>
