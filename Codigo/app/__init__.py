@@ -17,11 +17,16 @@ def create_app():
 
     db.init_app(app)
 
-    # Registrar blueprints si existen
+    # Blueprints ya resgistrados 
     try:
-        from Codigo.app.auth import bp as auth_bp
+        from app.auth import bp as auth_bp
         app.register_blueprint(auth_bp)
     except Exception:
         pass
+
+    from services.problemas_blueprint import problems_bp
+    from services.submissions_blueprint import submissions_bp
+    app.register_blueprint(problems_bp, url_prefix="/api/problems")
+    app.register_blueprint(submissions_bp, url_prefix="/api/submissions")
 
     return app

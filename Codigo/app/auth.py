@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify, g, make_response, render_template
-from Codigo.services.supabase_client import get_client, get_admin_client, SUPABASE_URL, SUPABASE_ANON_KEY
+from services.supabase_client import get_client, get_admin_client, SUPABASE_URL, SUPABASE_ANON_KEY
 import httpx
 import os
 from flask import current_app

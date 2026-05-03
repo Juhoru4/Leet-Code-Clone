@@ -73,8 +73,8 @@ def get_problema_por_id(problem_id):
     return None
 
 
-def get_casos_prueba(problem_id):
-    problema = get_problema_por_id(problem_id)
+def get_casos_prueba_publicos(problema_id):
+    problema = get_problema_por_id(problema_id)
     if problema is None:
         return None
-    return problema["casos_de_prueba"]
+    return [c for c in problema["casos_prueba"] if c["es_publico"]]
