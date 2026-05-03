@@ -4,6 +4,7 @@ import os
 from dotenv import load_dotenv
 from routes.problems import problems_bp
 
+
 load_dotenv()
 
 
@@ -18,6 +19,14 @@ def create_app():
 
     db.init_app(app)
 
+# Blueprint de problemas (TU HU)
     app.register_blueprint(problems_bp)
+
+    # Blueprint de auth (del equipo)
+    try:
+        from Codigo.app.auth import bp as auth_bp
+        app.register_blueprint(auth_bp)
+    except Exception:
+        pass
 
     return app
