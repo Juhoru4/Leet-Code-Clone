@@ -31,3 +31,19 @@ else:
 
 sys.modules.setdefault('models', models_module)
 sys.modules['Codigo.models'] = models_module
+
+if 'routes' in sys.modules:
+	routes_module = sys.modules['routes']
+else:
+	routes_module = import_module('Codigo.routes')
+
+sys.modules.setdefault('routes', routes_module)
+sys.modules['Codigo.routes'] = routes_module
+
+if 'services' in sys.modules:
+	services_module = sys.modules['services']
+else:
+	services_module = import_module('Codigo.services')
+
+sys.modules.setdefault('services', services_module)
+sys.modules['Codigo.services'] = services_module

@@ -1,10 +1,13 @@
 import uuid
-from flask import Blueprint, request, jsonify, session
+from threading import Lock
+from flask import Blueprint, request, jsonify, session, render_template
 from services.ejecutor import ejecutar_codigo
 from app.extensions import db
 from models.envio import Envio
 
 ejecucion_bp = Blueprint("ejecucion", __name__)
+_ejecuciones_activas = set()
+_lock_ejecuciones = Lock()
 
 # Mapeo de tipo_error del executor → estado del modelo
 ESTADOS = {
@@ -14,6 +17,11 @@ ESTADOS = {
     "timeout":     "timeout",
     "sistema":     "error_sistema",
 }
+
+
+@ejecucion_bp.route("/ejecutar", methods=["GET"])
+def ver_ejecutar():
+    return render_template("problema.html")
 
 @ejecucion_bp.route("/ejecutar", methods=["POST"])
 def ejecutar():
@@ -32,32 +40,44 @@ def ejecutar():
     #     return jsonify({"error": "No autenticado"}), 401
     usuario_id = "00000000-0000-0000-0000-000000000001"  # ← temporal
 
-    # Ejecutar el código
-    resultado = ejecutar_codigo(codigo, lenguaje)
+    with _lock_ejecuciones:
+        if usuario_id in _ejecuciones_activas:
+            return jsonify({
+                "error": "Ya hay una ejecución en curso para este usuario.",
+                "estado": "ejecutando"
+            }), 409
+        _ejecuciones_activas.add(usuario_id)
 
-    # Traducir tipo_error a estado
-    tipo_error = resultado.get("tipo_error")
-    if resultado.get("supero_tiempo_limite"):
-        tipo_error = "timeout"
-    estado = ESTADOS.get(tipo_error, "error_sistema")
+    try:
+        # Ejecutar el código
+        resultado = ejecutar_codigo(codigo, lenguaje)
 
-    # Guardar el envío usando el modelo de tu compañero
-    envio = Envio(
-        id              = str(uuid.uuid4()),
-        usuario_id      = usuario_id,
-        problema_id     = problema_id,
-        lenguaje        = lenguaje,
-        codigo_fuente   = codigo,
-        estado          = estado,
-        mensaje_error   = resultado.get("error") or None,
-        total_casos     = None,  # se llenará cuando implementes casos de prueba
-        casos_pasados   = None,
-        tiempo_ejecucion_ms = None,
-        memoria_usada_kb    = None,
-    )
-    db.session.add(envio)
-    db.session.commit()
+        # Traducir tipo_error a estado
+        tipo_error = resultado.get("tipo_error")
+        if resultado.get("supero_tiempo_limite"):
+            tipo_error = "timeout"
+        estado = ESTADOS.get(tipo_error, "error_sistema")
 
-    # Agregar el estado al resultado para que el HTML lo muestre
-    resultado["estado"] = estado
-    return jsonify(resultado)
+        # Guardar el envío usando el modelo de tu compañero
+        envio = Envio(
+            id              = str(uuid.uuid4()),
+            usuario_id      = usuario_id,
+            problema_id     = problema_id,
+            lenguaje        = lenguaje,
+            codigo_fuente   = codigo,
+            estado          = estado,
+            mensaje_error   = resultado.get("error") or None,
+            total_casos     = None,  # se llenará cuando implementes casos de prueba
+            casos_pasados   = None,
+            tiempo_ejecucion_ms = None,
+            memoria_usada_kb    = None,
+        )
+        db.session.add(envio)
+        db.session.commit()
+
+        # Agregar el estado al resultado para que el HTML lo muestre
+        resultado["estado"] = estado
+        return jsonify(resultado)
+    finally:
+        with _lock_ejecuciones:
+            _ejecuciones_activas.discard(usuario_id)

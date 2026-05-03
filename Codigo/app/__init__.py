@@ -7,7 +7,8 @@ load_dotenv()
 
 
 def create_app(database_uri=None):
-    app = Flask(__name__)
+    templates_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "templates"))
+    app = Flask(__name__, template_folder=templates_path)
 
     app.config["SQLALCHEMY_DATABASE_URI"] = database_uri or os.getenv(
         "SESSION_POOLER_URL",

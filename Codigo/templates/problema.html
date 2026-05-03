@@ -18,9 +18,12 @@
 
         #resultado { background: #f4f4f4; padding: 10px; min-height: 80px; white-space: pre-wrap; font-family: monospace; font-size: 13px; }
 
+        #estado-ejecucion { min-height: 20px; font-size: 13px; font-weight: 600; }
+
         .correcto   { color: green; }
         .error      { color: red; }
         .advertencia{ color: orange; }
+        .ejecutando { color: #b36b00; }
     </style>
 </head>
 <body>
@@ -47,6 +50,8 @@
             <button onclick="ejecutar()" id="btn-ejecutar">▶ Ejecutar</button>
         </div>
 
+        <div id="estado-ejecucion"></div>
+
         <textarea id="editor" placeholder="Escribe tu solución aquí..."></textarea>
 
         <div>
@@ -63,6 +68,7 @@
         const lenguaje = document.getElementById("selector-lenguaje").value;
         const btn = document.getElementById("btn-ejecutar");
         const resultadoDiv = document.getElementById("resultado");
+        const estadoDiv = document.getElementById("estado-ejecucion");
 
         if (!codigo.trim()) {
             resultadoDiv.className = "advertencia";
@@ -72,8 +78,10 @@
 
         btn.disabled = true;
         btn.textContent = "⏳ Ejecutando...";
+        estadoDiv.className = "ejecutando";
+        estadoDiv.textContent = "Ejecutando...";
         resultadoDiv.className = "";
-        resultadoDiv.textContent = "Ejecutando...";
+        resultadoDiv.textContent = "";
 
         try {
             const response = await fetch("/ejecutar", {
@@ -82,10 +90,23 @@
                 body: JSON.stringify({ codigo, lenguaje })
             });
 
+            if (response.status === 409) {
+                const conflicto = await response.json();
+                estadoDiv.className = "advertencia";
+                estadoDiv.textContent = "Ya hay una ejecución en curso para este usuario.";
+                resultadoDiv.className = "advertencia";
+                resultadoDiv.textContent = conflicto.error || "Ya hay una ejecución en curso.";
+                return;
+            }
+
             const resultado = await response.json();
+            estadoDiv.className = "correcto";
+            estadoDiv.textContent = "Ejecución finalizada.";
             mostrarResultado(resultado);
 
         } catch (e) {
+            estadoDiv.className = "error";
+            estadoDiv.textContent = "No se pudo completar la ejecución.";
             resultadoDiv.className = "error";
             resultadoDiv.textContent = "❌ No se pudo conectar con el servidor.";
         } finally {

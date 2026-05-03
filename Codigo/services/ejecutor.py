@@ -145,18 +145,18 @@ def ejecutar_codigo(codigo: str, lenguaje: str) -> dict:
         except FileNotFoundError:
             #Docker no está instalado o no está en el PATH
             return {
-                "stdout": "",
-                "stderr": "El sistema de ejecución no está disponible. Contacta al administrador.",
+                "output": "",
+                "error": "El sistema de ejecución no está disponible. Contacta al administrador.",
                 "tipo_error": "sistema",
-                "timeout": False
+                "supero_tiempo_limite": False
             }
 
         except Exception:
             #Cualquier otro fallo relacionado con el contenedor
             return {
-                "stdout": "",
-                "stderr": "Ocurrió un error al preparar el entorno de ejecución. Intenta de nuevo.",
+                "output": "",
+                "error": "Ocurrió un error al preparar el entorno de ejecución. Intenta de nuevo.",
                 "tipo_error": "sistema",
-                "timeout": False
+                "supero_tiempo_limite": False
             }
         

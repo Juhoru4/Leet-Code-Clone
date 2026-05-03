@@ -65,3 +65,8 @@ python main.py
 
 **Error: `image not found`**
 → No descargaste las imágenes. Corre los comandos `docker pull` del paso 3.
+
+
+cd "C:\Users\juhor\Documents\GitHub\Leet Code Clone\Codigo"
+py main.py
+http://127.0.0.1:5000/ejecutar
