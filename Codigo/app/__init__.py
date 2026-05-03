@@ -21,16 +21,16 @@ def create_app(database_uri=None):
 
     # Registrar blueprints si existen - Supabase Auth
     try:
-        from Codigo.app.auth import bp as auth_bp
+        from .auth import bp as auth_bp
         app.register_blueprint(auth_bp)
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"Error registrando auth blueprint: {e}")
 
     # Registrar blueprints - Ejecución de código
     try:
-        from Codigo.routes.ejecucion_endpoint import ejecucion_bp
+        from routes.ejecucion_endpoint import ejecucion_bp
         app.register_blueprint(ejecucion_bp)
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"Error registrando ejecucion blueprint: {e}")
 
     return app

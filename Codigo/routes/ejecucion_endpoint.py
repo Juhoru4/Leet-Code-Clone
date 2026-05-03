@@ -4,7 +4,7 @@ from flask import Blueprint, request, jsonify, session, render_template, g
 from services.ejecutor import ejecutar_codigo
 from app.extensions import db
 from models.envio import Envio
-from Codigo.app.auth import require_auth
+from app.auth import require_auth
 
 ejecucion_bp = Blueprint("ejecucion", __name__)
 _ejecuciones_activas = set()
