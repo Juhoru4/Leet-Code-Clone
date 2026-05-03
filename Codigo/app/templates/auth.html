@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Auth UI - Pruebas</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='auth.css') }}">
+</head>
+<body>
+  <main class="container">
+    <h1>Pruebas de Autenticación</h1>
+
+    <section class="card">
+      <h2>Register</h2>
+      <form id="register-form">
+        <label for="reg-email">Correo electrónico</label>
+        <input id="reg-email" name="email" placeholder="correo@ejemplo.com" required />
+
+        <label for="reg-password">Contraseña</label>
+        <input id="reg-password" name="password" type="password" placeholder="Contraseña" required />
+
+        <label for="reg-username">Nombre de usuario</label>
+        <input id="reg-username" name="username" placeholder="ej: juan123" required />
+
+        <label for="reg-full-name">Nombre completo</label>
+        <input id="reg-full-name" name="full_name" placeholder="ej: Juan Pérez" />
+
+        <label for="reg-role">Rol</label>
+        <select id="reg-role" name="role">
+          <option value="estudiante">Estudiante</option>
+          <option value="administrador">Administrador</option>
+        </select>
+
+        <button type="submit">Registrarse</button>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>Login</h2>
+      <form id="login-form">
+        <input name="email" placeholder="Email" required />
+        <input name="password" type="password" placeholder="Password" required />
+        <button type="submit">Login</button>
+      </form>
+    </section>
+
+    <section class="card actions">
+      <button id="btn-logout">Logout</button>
+      <button id="btn-me">Get /auth/me</button>
+    </section>
+
+    <section class="card">
+      <h2>Output</h2>
+      <pre id="output">(sin actividad)</pre>
+    </section>
+  </main>
+
+  <script>
+    const out = document.getElementById('output');
+    function show(obj){ out.textContent = JSON.stringify(obj, null, 2); }
+
+    async function post(path, body){
+      const res = await fetch(path, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      try { return await res.json(); } catch(e){ return { status: res.status }; }
+    }
+
+    document.getElementById('register-form').addEventListener('submit', async e => {
+      e.preventDefault();
+      const f = e.target;
+      const body = { email: f.email.value, password: f.password.value, username: f.username.value, full_name: f.full_name.value, role: f.role.value };
+      const r = await post('/auth/register', body);
+      show(r);
+      if (r && r.user_id && body.username && r.note) {
+        out.textContent += '\n\nNota: el usuario fue ajustado por el servidor para evitar duplicados.';
+      }
+    });
+
+    document.getElementById('login-form').addEventListener('submit', async e => {
+      e.preventDefault();
+      const f = e.target;
+      const body = { email: f.email.value, password: f.password.value };
+      const r = await post('/auth/login', body);
+      show(r);
+    });
+
+    document.getElementById('btn-logout').addEventListener('click', async () => {
+      const res = await fetch('/auth/logout', { method: 'POST', credentials: 'include' });
+      try{ show(await res.json()); } catch(e){ show({ status: res.status }); }
+    });
+
+    document.getElementById('btn-me').addEventListener('click', async () => {
+      const res = await fetch('/auth/me', { method: 'GET', credentials: 'include' });
+      try{ show(await res.json()); } catch(e){ show({ status: res.status }); }
+    });
+  </script>
+</body>
+</html>

@@ -17,4 +17,11 @@ def create_app():
 
     db.init_app(app)
 
+    # Registrar blueprints si existen
+    try:
+        from Codigo.app.auth import bp as auth_bp
+        app.register_blueprint(auth_bp)
+    except Exception:
+        pass
+
     return app
