@@ -40,9 +40,7 @@
       transition: color 0.2s;
     }
 
-    nav a:hover, nav a.active {
-      color: #e5e7eb;
-    }
+    nav a:hover, nav a.active { color: #e5e7eb; }
 
     .container {
       max-width: 1100px;
@@ -81,9 +79,7 @@
       transition: border-color 0.2s;
     }
 
-    select:focus {
-      border-color: #f59e0b;
-    }
+    select:focus { border-color: #f59e0b; }
 
     .stats {
       font-size: 0.85rem;
@@ -99,9 +95,7 @@
       overflow: hidden;
     }
 
-    thead {
-      background: #22263a;
-    }
+    thead { background: #22263a; }
 
     th {
       text-align: left;
@@ -120,13 +114,21 @@
       border-bottom: 1px solid #1f2232;
     }
 
-    tr:last-child td {
-      border-bottom: none;
-    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #1f2232; }
 
-    tr:hover td {
-      background: #1f2232;
+    /* RF-02.2: fila separadora de categoría */
+    .categoria-header td {
+      background: #12151f;
+      color: #6b7280;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 0.45rem 1.2rem;
+      border-bottom: 1px solid #2d2f3e;
     }
+    .categoria-header:hover td { background: #12151f; }
 
     .badge {
       display: inline-block;
@@ -136,19 +138,20 @@
       font-weight: 600;
     }
 
-    .badge-facil   { background: #052e16; color: #4ade80; }
-    .badge-medio   { background: #1c1917; color: #fbbf24; }
-    .badge-dificil { background: #1c0a0a; color: #f87171; }
+    .badge-facil    { background: #052e16; color: #4ade80; }
+    .badge-medio    { background: #1c1917; color: #fbbf24; }
+    .badge-dificil  { background: #1c0a0a; color: #f87171; }
+
+    /* RF-02.10: badge de estado */
+    .badge-disponible   { background: #052e16; color: #4ade80; }
+    .badge-nodisponible { background: #1f2232; color: #6b7280; }
 
     .problem-link {
       color: #e5e7eb;
       text-decoration: none;
       font-weight: 500;
     }
-
-    .problem-link:hover {
-      color: #f59e0b;
-    }
+    .problem-link:hover { color: #f59e0b; }
 
     .categoria-tag {
       display: inline-block;
@@ -194,7 +197,8 @@
 
     <div class="toolbar">
       <label for="filtro-dificultad">Dificultad:</label>
-      <select id="filtro-dificultad" onchange="cargarProblemas()">
+      <!-- RF-02.6: el select recupera el filtro guardado en sessionStorage -->
+      <select id="filtro-dificultad" onchange="guardarYCargar()">
         <option value="">Todos</option>
         <option value="facil">Fácil</option>
         <option value="medio">Medio</option>
@@ -211,30 +215,42 @@
           <th>Título</th>
           <th>Categoría</th>
           <th>Dificultad</th>
+          <th>Estado</th>
         </tr>
       </thead>
       <tbody id="cuerpo-tabla">
         <tr>
-          <td colspan="4" id="loading">Cargando problemas…</td>
+          <td colspan="5" id="loading">Cargando problemas…</td>
         </tr>
       </tbody>
     </table>
   </div>
 
   <script>
-    const DIFICULTAD_LABELS = {
-      facil: 'Fácil',
-      medio: 'Medio',
-      dificil: 'Difícil',
-    };
+    const DIFICULTAD_LABELS = { facil: 'Fácil', medio: 'Medio', dificil: 'Difícil' };
+    const ORDEN_DIFICULTAD  = { facil: 0, medio: 1, dificil: 2 };
 
-    async function cargarProblemas() {
+    // RF-02.6: restaurar filtro guardado al cargar la página
+    window.addEventListener('DOMContentLoaded', () => {
+      const filtroGuardado = sessionStorage.getItem('filtro-dificultad') || '';
+      document.getElementById('filtro-dificultad').value = filtroGuardado;
+      cargarProblemas(filtroGuardado);
+    });
+
+    // RF-02.6: guardar filtro y recargar lista
+    function guardarYCargar() {
       const dificultad = document.getElementById('filtro-dificultad').value;
-      const tbody = document.getElementById('cuerpo-tabla');
+      sessionStorage.setItem('filtro-dificultad', dificultad);
+      cargarProblemas(dificultad);
+    }
+
+    // RF-02.7: actualización dinámica sin recargar la página
+    async function cargarProblemas(dificultad) {
+      const tbody    = document.getElementById('cuerpo-tabla');
       const errorDiv = document.getElementById('error-msg');
       const contador = document.getElementById('contador');
 
-      tbody.innerHTML = '<tr><td colspan="4" id="loading">Cargando…</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="5" id="loading">Cargando…</td></tr>';
       errorDiv.style.display = 'none';
 
       let url = '/api/problems';
@@ -245,28 +261,57 @@
         if (!res.ok) throw new Error('Error del servidor: ' + res.status);
         const problemas = await res.json();
 
-        if (problemas.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="4" id="empty-msg">No hay problemas con ese filtro.</td></tr>';
+        // RF-02.10: solo mostrar disponibles (esta_activo=true)
+        const disponibles = problemas.filter(p => p.esta_activo !== false);
+
+        if (disponibles.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" id="empty-msg">No hay problemas con ese filtro.</td></tr>';
           contador.textContent = '';
           return;
         }
 
-        contador.textContent = problemas.length + ' problema(s)';
+        contador.textContent = disponibles.length + ' problema(s)';
 
-        tbody.innerHTML = problemas.map((p, i) => {
-          const badgeClass = 'badge-' + (p.dificultad || '');
-          const label = DIFICULTAD_LABELS[p.dificultad] || p.dificultad || '—';
-          const categoria = p.categoria || '—';
+        // RF-02.2: agrupar por categoría, luego ordenar por dificultad dentro de cada grupo
+        const porCategoria = {};
+        disponibles.forEach(p => {
+          const cat = p.categoria || 'Sin categoría';
+          if (!porCategoria[cat]) porCategoria[cat] = [];
+          porCategoria[cat].push(p);
+        });
 
-          return `
-            <tr>
-              <td style="color:#6b7280">${i + 1}</td>
-              <td><a class="problem-link" href="#">${escapeHtml(p.titulo)}</a></td>
-              <td><span class="categoria-tag">${escapeHtml(categoria)}</span></td>
-              <td><span class="badge ${badgeClass}">${label}</span></td>
-            </tr>
-          `;
-        }).join('');
+        Object.values(porCategoria).forEach(grupo => {
+          grupo.sort((a, b) => (ORDEN_DIFICULTAD[a.dificultad] ?? 99) - (ORDEN_DIFICULTAD[b.dificultad] ?? 99));
+        });
+
+        let filas = '';
+        let contador_global = 1;
+
+        Object.entries(porCategoria).forEach(([categoria, grupo]) => {
+          // fila de encabezado de categoría
+          filas += `
+            <tr class="categoria-header">
+              <td colspan="5">${escapeHtml(categoria)}</td>
+            </tr>`;
+
+          grupo.forEach(p => {
+            const badgeClass   = 'badge-' + (p.dificultad || '');
+            const label        = DIFICULTAD_LABELS[p.dificultad] || p.dificultad || '—';
+            const estadoClass  = p.esta_activo ? 'badge-disponible' : 'badge-nodisponible';
+            const estadoLabel  = p.esta_activo ? 'Disponible' : 'No disponible';
+
+            filas += `
+              <tr>
+                <td style="color:#6b7280">${contador_global++}</td>
+                <td><a class="problem-link" href="#">${escapeHtml(p.titulo)}</a></td>
+                <td><span class="categoria-tag">${escapeHtml(p.categoria || '—')}</span></td>
+                <td><span class="badge ${badgeClass}">${label}</span></td>
+                <td><span class="badge ${estadoClass}">${estadoLabel}</span></td>
+              </tr>`;
+          });
+        });
+
+        tbody.innerHTML = filas;
 
       } catch (err) {
         errorDiv.textContent = 'No se pudo cargar la lista de problemas. Verifica que el servidor esté corriendo. (' + err.message + ')';
@@ -282,8 +327,6 @@
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;');
     }
-
-    cargarProblemas();
   </script>
 
 </body>
