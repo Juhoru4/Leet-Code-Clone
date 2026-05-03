@@ -18,8 +18,18 @@ def create_app(database_uri=None):
 
     db.init_app(app)
 
-    # Registrar blueprints en el factory para que existan en app real y tests.
-    from routes.ejecucion_endpoint import ejecucion_bp
-    app.register_blueprint(ejecucion_bp)
+    # Registrar blueprints - Supabase Auth
+    try:
+        from Codigo.app.auth import bp as auth_bp
+        app.register_blueprint(auth_bp)
+    except Exception:
+        pass
+
+    # Registrar blueprints - Ejecución de código
+    try:
+        from Codigo.routes.ejecucion_endpoint import ejecucion_bp
+        app.register_blueprint(ejecucion_bp)
+    except Exception:
+        pass
 
     return app
