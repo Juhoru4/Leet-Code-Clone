@@ -13,24 +13,43 @@ def create_app(database_uri=None):
 
     app.config["SQLALCHEMY_DATABASE_URI"] = database_uri or os.getenv(
         "SESSION_POOLER_URL",
-        os.getenv("DATABASE_URL")
+        os.getenv("DATABASE_URL", "sqlite:///test.db")
     )
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
     db.init_app(app)
 
-    # Registrar blueprints si existen - Supabase Auth
+    # Auth y ejecución
     try:
         from .auth import bp as auth_bp
         app.register_blueprint(auth_bp)
     except Exception as e:
         print(f"Error registrando auth blueprint: {e}")
 
-    # Registrar blueprints - Ejecución de código
     try:
         from routes.ejecucion_endpoint import ejecucion_bp
         app.register_blueprint(ejecucion_bp)
     except Exception as e:
         print(f"Error registrando ejecucion blueprint: {e}")
+
+    # Problemas: UI/listado y detalle/casos
+    try:
+        from routes.problems import problems_bp as problems_ui_bp
+        app.register_blueprint(problems_ui_bp)
+    except Exception as e:
+        print(f"Error registrando problems ui blueprint: {e}")
+
+    try:
+        from services.problemas_blueprint import problems_bp as api_problems_bp
+        app.register_blueprint(api_problems_bp, url_prefix="/api/problems")
+    except Exception as e:
+        print(f"Error registrando api problems blueprint: {e}")
+
+    # Submissions
+    try:
+        from services.submissions_blueprint import submissions_bp
+        app.register_blueprint(submissions_bp, url_prefix="/api/submissions")
+    except Exception as e:
+        print(f"Error registrando submissions blueprint: {e}")
 
     return app

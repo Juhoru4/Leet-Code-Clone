@@ -36,6 +36,7 @@ class Problema(db.Model):
             'descripcion': self.descripcion,
             'dificultad': self.dificultad,
             'categoria_id': self.categoria_id,
+            'categoria': self.categoria.nombre if self.categoria else None,
             'esta_activo': self.esta_activo,
             'creado_el': self.creado_el.isoformat() if self.creado_el else None,
         }

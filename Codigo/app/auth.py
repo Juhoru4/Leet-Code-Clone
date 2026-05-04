@@ -1,4 +1,4 @@
-from flask import Blueprint, request, jsonify, g, make_response, render_template
+from flask import Blueprint, redirect, request, jsonify, g, make_response, render_template
 from services.supabase_client import get_client, get_admin_client, SUPABASE_URL, SUPABASE_ANON_KEY
 import httpx
 import os
@@ -198,13 +198,12 @@ def login():
     if not access_token:
         return jsonify({'error': 'could not retrieve access token', 'detail': res}), 500
 
-    resp = make_response(jsonify({'ok': True}))
+    resp = make_response(redirect('/problems/ui'))
     secure_cookie = request.is_secure
-    # Set HttpOnly cookies for access and refresh tokens
     resp.set_cookie('access_token', access_token, httponly=True, secure=secure_cookie, samesite='Lax', path='/')
     if refresh_token:
         resp.set_cookie('refresh_token', refresh_token, httponly=True, secure=secure_cookie, samesite='Lax', path='/')
-    return resp, 200
+    return resp 
 
 
 @bp.route('/logout', methods=['POST'])
