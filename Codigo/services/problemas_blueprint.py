@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify
 from app.auth import require_auth
-from services.problema import get_casos_prueba_publicos, get_problema_por_id
+from Codigo.services.problemas import get_casos_prueba_publicos, get_problema_por_id
 
 problems_bp = Blueprint("problemas", __name__)
 

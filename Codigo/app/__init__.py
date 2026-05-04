@@ -29,7 +29,7 @@ def create_app(database_uri=None):
     except Exception:
         pass
 
-    from services.problems_blueprint import problems_bp
+    from services.problemas_blueprint import problems_bp
     from services.submissions_blueprint import submissions_bp
     app.register_blueprint(problems_bp, url_prefix="/api/problems")
     app.register_blueprint(submissions_bp, url_prefix="/api/submissions")
