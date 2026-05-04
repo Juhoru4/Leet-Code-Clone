@@ -66,6 +66,7 @@
                 <option value="cpp">C++</option>
             </select>
             <button onclick="ejecutar()" id="btn-ejecutar">▶ Ejecutar</button>
+            <button onclick="probar()" id="btn-probar">✦ Probar</button>
         </div>
 
         <div id="estado-ejecucion"></div>
@@ -183,6 +184,68 @@
             div.textContent = "✅ Correcto:\n\n" + (resultado.stdout || resultado.output || "(sin salida)");
         }
     }
+
+    async function probar() {
+    const codigo = document.getElementById("editor").value;
+    const lenguaje = document.getElementById("selector-lenguaje").value;
+    const btn = document.getElementById("btn-probar");
+    const estadoDiv = document.getElementById("estado-ejecucion");
+    const resultadoDiv = document.getElementById("resultado");
+
+    if (!codigo.trim()) {
+        resultadoDiv.textContent = "⚠ Escribe algún código antes de probar.";
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = "⏳ Probando...";
+    estadoDiv.className = "ejecutando";
+    estadoDiv.textContent = "Ejecutando contra casos de prueba...";
+    resultadoDiv.textContent = "";
+
+    try {
+        const res = await fetch("/api/submissions/test-run", {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                problema_id: PROBLEMA_ID,
+                language: lenguaje,
+                source_code: codigo
+            })
+        });
+
+        const data = await res.json();
+
+        if (!data.resultado) {
+            estadoDiv.className = "error";
+            estadoDiv.textContent = data.error || "Error al ejecutar.";
+            return;
+        }
+
+        estadoDiv.className = "correcto";
+        estadoDiv.textContent = `Pruebas completadas: ${data.casos_pasados}/${data.total_casos} aprobados.`;
+
+        let html = "";
+        for (const caso of data.resultado) {
+            const color = caso.estado === "Aprobado" ? "green" : "red";
+            const icono = caso.estado === "Aprobado" ? "✅" : "❌";
+            html += `
+            <div style="border:1px solid ${color}; border-radius:6px; padding:8px; margin:6px 0; color:${color}">
+                ${icono} <strong>${caso.descripcion || "Caso " + caso.caso_id}</strong>: ${caso.estado}
+                <br><small style="color:#555">Esperado: <code>${caso.esperado}</code> — Obtenido: <code>${caso.output}</code></small>
+            </div>`;
+        }
+        resultadoDiv.innerHTML = html;
+
+    } catch (e) {
+        estadoDiv.className = "error";
+        estadoDiv.textContent = "No se pudo conectar con el servidor.";
+    } finally {
+        btn.disabled = false;
+        btn.textContent = "🧪 Probar";
+    }
+}
 </script>
 
 </body>

@@ -1,9 +1,21 @@
+# -*- coding: utf-8 -*-
 import uuid
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, g
 from app.auth import require_auth
-from models.envio import guardar_envio, obtener_envio
+from models.envio import guardar_envio, obtener_envio, actualizar_resultados
+from services.ejecutor import ejecutar_codigo
+from models.caso_prueba import CasoPrueba
 
 submissions_bp = Blueprint("submissions", __name__)
+
+
+def inyectar_stdin(codigo, lenguaje, entrada):
+    if lenguaje == "python":
+        return f'import sys\nsys.stdin = __import__("io").StringIO({repr(entrada)})\n' + codigo
+    elif lenguaje in ("java", "cpp"):
+        return codigo
+    return codigo
+
 
 @submissions_bp.route("/test-run", methods=["POST"])
 @require_auth
@@ -17,14 +29,52 @@ def test_run():
     if not all([problema_id, lenguaje, codigo]):
         return jsonify({"error": "Faltan campos: problema_id, language, source_code"}), 400
 
-    submission_id = str(uuid.uuid4())
-    guardar_envio(submission_id, problema_id, lenguaje, codigo)
+    casos = CasoPrueba.query.filter_by(
+        problema_id=problema_id,
+        es_publico=True
+    ).order_by(CasoPrueba.orden).all()
 
-    #Para luego:  Aquí irá el .delay() de Celery cuando esté configurado 
+    if not casos:
+        return jsonify({"error": "No hay casos de prueba para este problema"}), 404
+
+    submission_id = str(uuid.uuid4())
+    resultados = []
+
+    for caso in casos:
+        codigo_con_input = inyectar_stdin(codigo, lenguaje, caso.entrada or "")
+        resultado = ejecutar_codigo(codigo_con_input, lenguaje)
+
+        output_obtenido = (resultado.get("stdout") or "").strip()
+        salida_esperada = (caso.salida_esperada or "").strip()
+
+        if resultado.get("tipo_error"):
+            estado_caso = "Fallo"
+            output_obtenido = resultado.get("stderr") or resultado.get("error") or "Error de ejecución"
+        elif output_obtenido == salida_esperada:
+            estado_caso = "Aprobado"
+        else:
+            estado_caso = "Fallo"
+
+        resultados.append({
+            "caso_id": caso.id,
+            "descripcion": caso.descripcion,
+            "estado": estado_caso,
+            "output": output_obtenido,
+            "esperado": salida_esperada
+        })
+
+    casos_pasados = sum(1 for r in resultados if r["estado"] == "Aprobado")
+    guardar_envio(submission_id, problema_id, lenguaje, codigo)
+    actualizar_resultados(submission_id, resultados)
+
     return jsonify({
         "submission_id": submission_id,
-        "status": "queued"
-    }), 202
+        "status": "Completado",
+        "estado": "Completado",
+        "casos_pasados": casos_pasados,
+        "total_casos": len(casos),
+        "resultado": resultados
+    }), 200
 
 
 @submissions_bp.route("/<submission_id>/results", methods=["GET"])

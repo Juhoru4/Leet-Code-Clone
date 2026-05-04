@@ -40,3 +40,11 @@ def get_problems():
     problemas.sort(key=lambda p: orden.get(p.dificultad, 99))
 
     return jsonify([p.to_dict() for p in problemas])
+
+@problems_bp.route('/api/problems/<problema_id>', methods=['GET'])
+def get_problem(problema_id):
+    """Retorna un problema específico por su ID."""
+    problema = Problema.query.get(problema_id)
+    if problema is None:
+        return jsonify({"error": "Problema no encontrado"}), 404
+    return jsonify(problema.to_dict()), 200
