@@ -85,3 +85,32 @@ def obtener_resultados(submission_id):
     return jsonify(envio), 200
 
 
+@submissions_bp.route("/submit", methods=["POST"])
+@require_auth
+def submit_attempt():
+    datos = request.get_json() or {}
+    problema_id = datos.get('problema_id')
+    lenguaje = datos.get('language')
+    codigo = datos.get('source_code')
+    resultados = datos.get('resultados') or []
+
+    if not all([problema_id, lenguaje, codigo]):
+        return jsonify({"error": "Faltan campos: problema_id, language, source_code"}), 400
+
+    total = len(resultados)
+    casos_pasados = sum(1 for r in resultados if r.get('estado') == 'Aprobado')
+
+    if total == 0:
+        return jsonify({"error": "No hay resultados para enviar"}), 400
+
+    if casos_pasados != total:
+        return jsonify({"error": "No se pueden enviar intentos que no pasan todos los casos"}), 400
+
+    # Guardar el envío (mock temporal)
+    submission_id = str(uuid.uuid4())
+    guardar_envio(submission_id, problema_id, lenguaje, codigo)
+    actualizar_resultados(submission_id, resultados)
+
+    return jsonify({"submission_id": submission_id, "status": "guardado"}), 201
+
+

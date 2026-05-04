@@ -95,6 +95,7 @@
                 <option value="cpp">C++</option>
             </select>
             <button onclick="ejecutar()" id="btn-ejecutar">▶ Ejecutar</button>
+            <button onclick="enviarIntento()" id="btn-enviar" style="display:none; margin-left:8px;">📤 Enviar intento</button>
         </div>
 
         <div id="estado-ejecucion"></div>
@@ -222,6 +223,17 @@
             estadoDiv.textContent = `Pruebas completadas: ${resultado.casos_pasados}/${resultado.total_casos} aprobados.`;
             mostrarResultado(resultado);
 
+            // habilitar el botón de enviar si pasó todos los casos
+            const btnEnviar = document.getElementById('btn-enviar');
+            if (resultado.casos_pasados === resultado.total_casos) {
+                btnEnviar.style.display = 'inline-block';
+                btnEnviar.disabled = false;
+                // guardar último resultado en el botón para enviar luego
+                btnEnviar.dataset.payload = JSON.stringify(resultado);
+            } else {
+                btnEnviar.style.display = 'none';
+            }
+
         } catch (e) {
             estadoDiv.className = "error";
             estadoDiv.textContent = "No se pudo completar la evaluación.";
@@ -230,6 +242,60 @@
         } finally {
             btn.disabled = false;
             btn.textContent = "▶ Ejecutar";
+        }
+    }
+
+    async function enviarIntento() {
+        const btn = document.getElementById('btn-enviar');
+        const estadoDiv = document.getElementById('estado-ejecucion');
+        const resultadoDiv = document.getElementById('resultado');
+
+        const payload = btn.dataset.payload ? JSON.parse(btn.dataset.payload) : null;
+        if (!payload) {
+            estadoDiv.className = 'error';
+            estadoDiv.textContent = 'No hay resultados para enviar.';
+            return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = '📤 Enviando...';
+
+        try {
+            const response = await fetch('/api/submissions/submit', {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    problema_id: PROBLEMA_ID,
+                    language: document.getElementById('selector-lenguaje').value,
+                    source_code: document.getElementById('editor').value,
+                    resultados: payload.resultado || payload.result
+                })
+            });
+
+            const data = await response.json();
+            if (!response.ok) {
+                estadoDiv.className = 'error';
+                estadoDiv.textContent = data.error || 'No se pudo enviar el intento.';
+                resultadoDiv.className = 'error';
+                resultadoDiv.textContent = data.error || 'No se pudo enviar el intento.';
+                return;
+            }
+
+            estadoDiv.className = 'correcto';
+            estadoDiv.textContent = 'Intento enviado correctamente.';
+            resultadoDiv.className = 'correcto';
+            resultadoDiv.textContent = '✅ Envío guardado: ' + (data.submission_id || 'ok');
+            btn.style.display = 'none';
+
+        } catch (err) {
+            estadoDiv.className = 'error';
+            estadoDiv.textContent = 'Error enviando el intento.';
+            resultadoDiv.className = 'error';
+            resultadoDiv.textContent = 'No se pudo conectar con el servidor.';
+        } finally {
+            btn.disabled = false;
+            btn.textContent = '📤 Enviar intento';
         }
     }
 
