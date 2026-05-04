@@ -3,10 +3,7 @@ from models.problema import Problema
 
 problems_bp = Blueprint('problems', __name__)
 
-#mientras no exista menú principal, la raíz redirige automáticamente a la lista de problemas
-@problems_bp.route('/')
-def home():
-    return redirect(url_for('problems.index'))
+
 
 
 @problems_bp.route('/problems/ui')
