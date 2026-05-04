@@ -8,9 +8,9 @@ import os
 app = create_app()
 
 
-@app.route("/problema/<int:problema_id>")
+@app.route("/problema/<problema_id>")
 def problema(problema_id):
-    return render_template("problema.html")
+    return render_template("resolver_problema.html", problema_id=problema_id)
 
 
 @app.shell_context_processor

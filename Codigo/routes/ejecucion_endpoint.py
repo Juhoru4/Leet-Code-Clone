@@ -5,6 +5,7 @@ from services.ejecutor import ejecutar_codigo
 from app.extensions import db
 from models.envio import Envio
 from app.auth import require_auth
+from models.problema import Problema
 
 ejecucion_bp = Blueprint("ejecucion", __name__)
 _ejecuciones_activas = set()
@@ -22,7 +23,8 @@ ESTADOS = {
 
 @ejecucion_bp.route("/ejecutar", methods=["GET"])
 def ver_ejecutar():
-    return render_template("problema.html")
+    problema_id = request.args.get('problema_id')
+    return render_template("resolver_problema.html", problema_id=problema_id)
 
 @ejecucion_bp.route("/ejecutar", methods=["POST"])
 @require_auth
@@ -49,8 +51,21 @@ def ejecutar():
         _ejecuciones_activas.add(usuario_id)
 
     try:
-        # Ejecutar el código
-        resultado = ejecutar_codigo(codigo, lenguaje)
+        # Obtener límites del problema (si existe)
+        problema = None
+        try:
+            problema = Problema.query.get(problema_id)
+        except Exception:
+            problema = None
+
+        timeout_ms = None
+        memory_mb = None
+        if problema:
+            timeout_ms = getattr(problema, 'limite_tiempo_ms', None)
+            memory_mb = getattr(problema, 'limite_memoria_mb', None)
+
+        # Ejecutar el código usando los límites del problema cuando estén disponibles
+        resultado = ejecutar_codigo(codigo, lenguaje, timeout_ms=timeout_ms, memory_mb=memory_mb)
 
         # Traducir tipo_error a estado
         tipo_error = resultado.get("tipo_error")
@@ -66,7 +81,7 @@ def ejecutar():
             lenguaje        = lenguaje,
             codigo_fuente   = codigo,
             estado          = estado,
-            mensaje_error   = resultado.get("error") or None,
+            mensaje_error   = resultado.get("stderr") or resultado.get("error") or None,
             total_casos     = None,  # se llenará cuando implementes casos de prueba
             casos_pasados   = None,
             tiempo_ejecucion_ms = None,

@@ -71,9 +71,10 @@ def limpiar_mensaje_error(stderr: str) -> str:
     return "\n".join(limpias)
 
 
-def ejecutar_codigo(codigo: str, lenguaje: str) -> dict:
+def ejecutar_codigo(codigo: str, lenguaje: str, timeout_ms: int = None, memory_mb: int = None) -> dict:
 
-    #Recibe el código del usuario y el lenguaje, devuelve un dict con: output, error, y si se acabo el tiempo limite.
+    # Recibe el código del usuario y el lenguaje, devuelve un dict con:
+    # stdout, stderr, tipo_error, supero_tiempo_limite
 
     config = LENGUAJES.get(lenguaje)
     if not config:
@@ -87,11 +88,15 @@ def ejecutar_codigo(codigo: str, lenguaje: str) -> dict:
         with open(ruta_archivo, "w") as f:
             f.write(codigo)
 
+        # determinar memoria y timeout
+        mem_flag = f"{memory_mb}m" if memory_mb else "128m"
+        timeout_seconds = (timeout_ms / 1000) if timeout_ms else 3
+
         comando_docker = [
             "docker", "run",
             "--rm",
             "--network", "none",
-            "--memory", "128m",
+            "--memory", mem_flag,
             "--cpus", "0.5",
             "-v", f"{carpeta_tmp}:/code",
             "-w", "/code",
@@ -103,60 +108,69 @@ def ejecutar_codigo(codigo: str, lenguaje: str) -> dict:
                 comando_docker,
                 capture_output=True,
                 text=True,
-                timeout=3
+                timeout=timeout_seconds
             )
 
-            #si hubo errores se clasifica qué tipo de error es
-            if resultado.stderr:
-                mensaje_limpio = limpiar_mensaje_error(resultado.stderr)
+            # si hubo stderr, clasificamos
+            stderr_raw = resultado.stderr or ""
+            stdout_raw = resultado.stdout or ""
+            mensaje_limpio = limpiar_mensaje_error(stderr_raw)
 
-                if es_error_compilacion(resultado.stderr, lenguaje):
+            if stderr_raw:
+                if es_error_compilacion(stderr_raw, lenguaje):
                     return {
-                        "output": "",
-                        "error": mensaje_limpio,
+                        "stdout": "",
+                        "stderr": mensaje_limpio,
                         "tipo_error": "compilacion",
-                        "supero_tiempo_limite": False
+                        "supero_tiempo_limite": False,
+                        "timeout": False
                     }
                 else:
                     return {
-                        "output": resultado.stdout,
-                        "error": mensaje_limpio,
+                        "stdout": stdout_raw,
+                        "stderr": mensaje_limpio,
                         "tipo_error": "ejecucion",
-                        "supero_tiempo_limite": False
+                        "supero_tiempo_limite": False,
+                        "timeout": False
                     }
 
-            #sin errores
+            # sin errores
             return {
-                "output": resultado.stdout,
-                "error": "",
+                "stdout": stdout_raw,
+                "stderr": "",
                 "tipo_error": None,
-                "supero_tiempo_limite": False
+                "supero_tiempo_limite": False,
+                "timeout": False
             }
 
         #se exedio el limite del tiempo
         except subprocess.TimeoutExpired:
             return {
-                "output": "",
-                "error": "Tiempo límite excedido (3 segundos)",
-                "supero_tiempo_limite": True
+                "stdout": "",
+                "stderr": f"Tiempo límite excedido ({timeout_seconds} segundos)",
+                "tipo_error": "timeout",
+                "supero_tiempo_limite": True,
+                "timeout": True
             }
         
         #error al crear el contenedor
         except FileNotFoundError:
             #Docker no está instalado o no está en el PATH
             return {
-                "output": "",
-                "error": "El sistema de ejecución no está disponible. Contacta al administrador.",
+                "stdout": "",
+                "stderr": "El sistema de ejecución no está disponible. Contacta al administrador.",
                 "tipo_error": "sistema",
-                "supero_tiempo_limite": False
+                "supero_tiempo_limite": False,
+                "timeout": False
             }
 
         except Exception:
             #Cualquier otro fallo relacionado con el contenedor
             return {
-                "output": "",
-                "error": "Ocurrió un error al preparar el entorno de ejecución. Intenta de nuevo.",
+                "stdout": "",
+                "stderr": "Ocurrió un error al preparar el entorno de ejecución. Intenta de nuevo.",
                 "tipo_error": "sistema",
-                "supero_tiempo_limite": False
+                "supero_tiempo_limite": False,
+                "timeout": False
             }
         
