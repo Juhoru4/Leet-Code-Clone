@@ -19,41 +19,55 @@ def inyectar_stdin(codigo, lenguaje, entrada):
 @submissions_bp.route("/test-run", methods=["POST"])
 @require_auth
 def test_run():
+    # El frontend nos manda el problema, el lenguaje y el código del usuario.
     datos = request.get_json()
 
     problema_id = datos.get("problema_id")
     lenguaje = datos.get("language")
     codigo = datos.get("source_code")
 
+    # Si falta cualquiera de los campos mínimos, no podemos evaluar nada.
     if not all([problema_id, lenguaje, codigo]):
         return jsonify({"error": "Faltan campos: problema_id, language, source_code"}), 400
 
+    # Traemos solo los casos públicos para este problema; son los que ve y usa el usuario.
     casos = CasoPrueba.query.filter_by(
         problema_id=problema_id,
         es_publico=True
     ).order_by(CasoPrueba.orden).all()
 
+    # Sin casos no hay contra qué comparar la solución.
     if not casos:
         return jsonify({"error": "No hay casos de prueba para este problema"}), 404
 
+    # Creamos un ID único para guardar luego este intento y su resultado.
     submission_id = str(uuid.uuid4())
     resultados = []
 
+    # Recorremos cada caso de prueba para ejecutar el código del usuario con esa entrada.
     for caso in casos:
+        # En Python inyectamos stdin; en Java/C++ la entrada se maneja dentro del ejecutor.
         codigo_con_input = inyectar_stdin(codigo, lenguaje, caso.entrada or "")
+
+        # Aquí se compila/ejecuta el código real y se obtiene stdout/stderr/errores.
         resultado = ejecutar_codigo(codigo_con_input, lenguaje)
 
+        # Normalizamos la salida para comparar de forma simple con la salida esperada.
         output_obtenido = (resultado.get("stdout") or "").strip()
         salida_esperada = (caso.salida_esperada or "").strip()
 
+        # Si el ejecutor reporta un error, el caso falla aunque haya salida parcial.
         if resultado.get("tipo_error"):
             estado_caso = "Fallo"
             output_obtenido = resultado.get("stderr") or resultado.get("error") or "Error de ejecución"
+        # Si lo que imprimió el programa coincide exactamente con la salida esperada, aprobamos.
         elif output_obtenido == salida_esperada:
             estado_caso = "Aprobado"
+        # Cualquier otra salida se considera incorrecta.
         else:
             estado_caso = "Fallo"
 
+        # Guardamos el detalle por caso para devolverlo al frontend y poder mostrar el desglose.
         resultados.append({
             "caso_id": caso.id,
             "descripcion": caso.descripcion,
@@ -62,10 +76,14 @@ def test_run():
             "esperado": salida_esperada
         })
 
+    # Contamos cuántos casos pasaron para el resumen final.
     casos_pasados = sum(1 for r in resultados if r["estado"] == "Aprobado")
+
+    # Persistimos el envío y luego asociamos los resultados por caso.
     guardar_envio(submission_id, problema_id, lenguaje, codigo)
     actualizar_resultados(submission_id, resultados)
 
+    # Respuesta final que consume el frontend para pintar el resultado.
     return jsonify({
         "submission_id": submission_id,
         "status": "Completado",
