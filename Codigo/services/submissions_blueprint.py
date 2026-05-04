@@ -1,6 +1,5 @@
-# -*- coding: utf-8 -*-
 import uuid
-from flask import Blueprint, jsonify, request, g
+from flask import Blueprint, jsonify, request
 from app.auth import require_auth
 from models.envio import guardar_envio, obtener_envio, actualizar_resultados
 from services.ejecutor import ejecutar_codigo
@@ -84,3 +83,5 @@ def obtener_resultados(submission_id):
     if envio is None:
         return jsonify({"error": "Envío no encontrado"}), 404
     return jsonify(envio), 200
+
+

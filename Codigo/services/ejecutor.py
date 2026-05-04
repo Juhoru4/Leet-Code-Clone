@@ -85,7 +85,7 @@ def ejecutar_codigo(codigo: str, lenguaje: str, timeout_ms: int = None, memory_m
     with tempfile.TemporaryDirectory() as carpeta_tmp: #crea un directorio temporal
 
         ruta_archivo = os.path.join(carpeta_tmp, config["archivo"])
-        with open(ruta_archivo, "w") as f:
+        with open(ruta_archivo, "w", encoding="utf-8", newline="\n") as f:
             f.write(codigo)
 
         # determinar memoria y timeout
@@ -154,21 +154,29 @@ def ejecutar_codigo(codigo: str, lenguaje: str, timeout_ms: int = None, memory_m
             }
         
         #error al crear el contenedor
-        except FileNotFoundError:
+        except FileNotFoundError as e:
             #Docker no está instalado o no está en el PATH
             return {
                 "stdout": "",
-                "stderr": "El sistema de ejecución no está disponible. Contacta al administrador.",
+                "stderr": "Docker no está instalado o no está en el PATH. Asegúrate de tener Docker Desktop abierto y en ejecución.",
                 "tipo_error": "sistema",
                 "supero_tiempo_limite": False,
                 "timeout": False
             }
 
-        except Exception:
+        except Exception as e:
             #Cualquier otro fallo relacionado con el contenedor
+            error_msg = str(e)
+            if "image" in error_msg.lower() and "not found" in error_msg.lower():
+                stderr_msg = "Las imágenes de Docker no están disponibles. Ejecuta: docker pull python:3.11-slim eclipse-temurin:17-jdk gcc:13"
+            elif "cannot connect" in error_msg.lower() or "daemon" in error_msg.lower():
+                stderr_msg = "No se puede conectar a Docker. Asegúrate de que Docker Desktop esté abierto y en ejecución."
+            else:
+                stderr_msg = f"Error del sistema: {error_msg}"
+            
             return {
                 "stdout": "",
-                "stderr": "Ocurrió un error al preparar el entorno de ejecución. Intenta de nuevo.",
+                "stderr": stderr_msg,
                 "tipo_error": "sistema",
                 "supero_tiempo_limite": False,
                 "timeout": False

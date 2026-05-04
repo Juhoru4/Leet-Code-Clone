@@ -39,12 +39,6 @@ def create_app(database_uri=None):
     except Exception as e:
         print(f"Error registrando problems ui blueprint: {e}")
 
-    try:
-        from services.problemas_blueprint import problems_bp as api_problems_bp
-        app.register_blueprint(api_problems_bp, url_prefix="/api/problems")
-    except Exception as e:
-        print(f"Error registrando api problems blueprint: {e}")
-
     # Submissions
     try:
         from services.submissions_blueprint import submissions_bp

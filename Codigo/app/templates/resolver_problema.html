@@ -12,6 +12,30 @@
 
         .panel-editor { flex: 1; display: flex; flex-direction: column; gap: 10px; }
 
+        .casos-prueba {
+            margin-top: 12px;
+            border-top: 1px solid #ddd;
+            padding-top: 12px;
+        }
+
+        .caso-item {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            margin: 8px 0;
+            background: #fff;
+        }
+
+        .caso-item strong { display: block; margin-bottom: 6px; }
+
+        .caso-item pre {
+            margin: 6px 0 0;
+            padding: 8px;
+            background: #f8f8f8;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+
         textarea { flex: 1; width: 100%; font-family: monospace; font-size: 14px; padding: 8px; resize: none; }
 
         select, button { padding: 6px 12px; font-size: 14px; }
@@ -56,6 +80,11 @@
             <strong>Ejemplo - Salida:</strong>
             <pre id="ejemplo_salida" style="background:#f0f0f0; padding:8px;">—</pre>
         </div>
+
+        <div class="casos-prueba">
+            <strong>Casos de prueba públicos:</strong>
+            <div id="casos-prueba-lista" style="margin-top:8px; color:#666;">Cargando casos…</div>
+        </div>
     </div>
 
     <div class="panel-editor">
@@ -66,7 +95,6 @@
                 <option value="cpp">C++</option>
             </select>
             <button onclick="ejecutar()" id="btn-ejecutar">▶ Ejecutar</button>
-            <button onclick="probar()" id="btn-probar">✦ Probar</button>
         </div>
 
         <div id="estado-ejecucion"></div>
@@ -87,6 +115,7 @@
 
     window.addEventListener('DOMContentLoaded', () => {
         cargarProblema();
+        cargarCasosPrueba();
     });
 
     async function cargarProblema() {
@@ -112,6 +141,33 @@
         }
     }
 
+    async function cargarCasosPrueba() {
+        const contenedor = document.getElementById('casos-prueba-lista');
+        try {
+            const res = await fetch('/api/problems/' + encodeURIComponent(PROBLEMA_ID) + '/test-cases');
+            if (!res.ok) throw new Error('No se pudieron cargar los casos');
+            const data = await res.json();
+            const casos = data.casos || [];
+
+            if (!casos.length) {
+                contenedor.textContent = 'No hay casos de prueba públicos para este problema.';
+                return;
+            }
+
+            contenedor.innerHTML = casos.map((caso) => `
+                <div class="caso-item">
+                    <strong>${caso.descripcion || ('Caso ' + caso.orden)}</strong>
+                    <div><b>Entrada:</b></div>
+                    <pre>${caso.entrada || '—'}</pre>
+                    <div><b>Salida esperada:</b></div>
+                    <pre>${caso.salida_esperada || '—'}</pre>
+                </div>
+            `).join('');
+        } catch (err) {
+            contenedor.textContent = 'No se pudieron cargar los casos de prueba.';
+        }
+    }
+
     async function ejecutar() {
         const codigo = document.getElementById("editor").value;
         const lenguaje = document.getElementById("selector-lenguaje").value;
@@ -126,17 +182,22 @@
         }
 
         btn.disabled = true;
-        btn.textContent = "⏳ Ejecutando...";
+        btn.textContent = "⏳ Evaluando...";
         estadoDiv.className = "ejecutando";
-        estadoDiv.textContent = "Ejecutando...";
+        estadoDiv.textContent = "Ejecutando contra casos de prueba...";
         resultadoDiv.className = "";
         resultadoDiv.textContent = "";
 
         try {
-            const response = await fetch("/ejecutar", {
+            const response = await fetch("/api/submissions/test-run", {
                 method: "POST",
+                credentials: "include",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ codigo, lenguaje, problema_id: PROBLEMA_ID })
+                body: JSON.stringify({
+                    problema_id: PROBLEMA_ID,
+                    language: lenguaje,
+                    source_code: codigo
+                })
             });
 
             if (response.status === 409) {
@@ -149,13 +210,21 @@
             }
 
             const resultado = await response.json();
+            if (!response.ok) {
+                estadoDiv.className = "error";
+                estadoDiv.textContent = resultado.error || "No se pudo evaluar el código.";
+                resultadoDiv.className = "error";
+                resultadoDiv.textContent = resultado.error || "No se pudo evaluar el código.";
+                return;
+            }
+
             estadoDiv.className = "correcto";
-            estadoDiv.textContent = "Ejecución finalizada.";
+            estadoDiv.textContent = `Pruebas completadas: ${resultado.casos_pasados}/${resultado.total_casos} aprobados.`;
             mostrarResultado(resultado);
 
         } catch (e) {
             estadoDiv.className = "error";
-            estadoDiv.textContent = "No se pudo completar la ejecución.";
+            estadoDiv.textContent = "No se pudo completar la evaluación.";
             resultadoDiv.className = "error";
             resultadoDiv.textContent = "❌ No se pudo conectar con el servidor.";
         } finally {
@@ -179,73 +248,25 @@
         } else if (resultado.tipo_error === "sistema") {
             div.className = "error";
             div.textContent = "⚙️ " + (resultado.stderr || resultado.error || '');
+        } else if (Array.isArray(resultado.resultado)) {
+            let html = "";
+            for (const caso of resultado.resultado) {
+                const color = caso.estado === "Aprobado" ? "green" : "red";
+                const icono = caso.estado === "Aprobado" ? "✅" : "❌";
+                html += `
+                <div style="border:1px solid ${color}; border-radius:6px; padding:8px; margin:6px 0; color:${color}">
+                    ${icono} <strong>${caso.descripcion || "Caso " + caso.caso_id}</strong>: ${caso.estado}
+                    <br><small style="color:#555">Esperado: <code>${caso.esperado}</code> — Obtenido: <code>${caso.output}</code></small>
+                </div>`;
+            }
+            div.className = "";
+            div.innerHTML = html;
         } else {
             div.className = "correcto";
             div.textContent = "✅ Correcto:\n\n" + (resultado.stdout || resultado.output || "(sin salida)");
         }
     }
 
-    async function probar() {
-    const codigo = document.getElementById("editor").value;
-    const lenguaje = document.getElementById("selector-lenguaje").value;
-    const btn = document.getElementById("btn-probar");
-    const estadoDiv = document.getElementById("estado-ejecucion");
-    const resultadoDiv = document.getElementById("resultado");
-
-    if (!codigo.trim()) {
-        resultadoDiv.textContent = "⚠ Escribe algún código antes de probar.";
-        return;
-    }
-
-    btn.disabled = true;
-    btn.textContent = "⏳ Probando...";
-    estadoDiv.className = "ejecutando";
-    estadoDiv.textContent = "Ejecutando contra casos de prueba...";
-    resultadoDiv.textContent = "";
-
-    try {
-        const res = await fetch("/api/submissions/test-run", {
-            method: "POST",
-            credentials: "include",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                problema_id: PROBLEMA_ID,
-                language: lenguaje,
-                source_code: codigo
-            })
-        });
-
-        const data = await res.json();
-
-        if (!data.resultado) {
-            estadoDiv.className = "error";
-            estadoDiv.textContent = data.error || "Error al ejecutar.";
-            return;
-        }
-
-        estadoDiv.className = "correcto";
-        estadoDiv.textContent = `Pruebas completadas: ${data.casos_pasados}/${data.total_casos} aprobados.`;
-
-        let html = "";
-        for (const caso of data.resultado) {
-            const color = caso.estado === "Aprobado" ? "green" : "red";
-            const icono = caso.estado === "Aprobado" ? "✅" : "❌";
-            html += `
-            <div style="border:1px solid ${color}; border-radius:6px; padding:8px; margin:6px 0; color:${color}">
-                ${icono} <strong>${caso.descripcion || "Caso " + caso.caso_id}</strong>: ${caso.estado}
-                <br><small style="color:#555">Esperado: <code>${caso.esperado}</code> — Obtenido: <code>${caso.output}</code></small>
-            </div>`;
-        }
-        resultadoDiv.innerHTML = html;
-
-    } catch (e) {
-        estadoDiv.className = "error";
-        estadoDiv.textContent = "No se pudo conectar con el servidor.";
-    } finally {
-        btn.disabled = false;
-        btn.textContent = "🧪 Probar";
-    }
-}
 </script>
 
 </body>
