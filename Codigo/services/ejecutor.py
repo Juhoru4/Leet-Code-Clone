@@ -5,6 +5,8 @@ import subprocess
 import tempfile
 import os
 import re
+import ast
+import textwrap
 
 #Configuración por lenguaje:
 LENGUAJES = {
@@ -82,11 +84,51 @@ def ejecutar_codigo(codigo: str, lenguaje: str, timeout_ms: int = None, memory_m
 
 
 
+    # Para Python: si el código define una función pero no tiene
+    # un bloque `if __name__ == "__main__"`, añadimos un wrapper
+    # que invoque la última función definida y haga `print` de su retorno.
+    codigo_a_escribir = codigo
+    if lenguaje == "python":
+        try:
+            tree = ast.parse(codigo)
+            func_defs = [n for n in tree.body if isinstance(n, ast.FunctionDef)]
+            has_main = any(
+                isinstance(n, ast.If) and
+                any(isinstance(x, ast.Name) and x.id == "__name__" for x in ast.walk(n.test))
+                for n in tree.body if isinstance(n, ast.If)
+            )
+
+            if func_defs and not has_main:
+                last = func_defs[-1]
+                fname = last.name
+                wrapper = textwrap.dedent(f"""
+# Auto-generated invocation wrapper
+if __name__ == '__main__':
+    import sys, traceback
+    _input = sys.stdin.read()
+    try:
+        try:
+            _res = {fname}()
+        except TypeError:
+            try:
+                _res = {fname}(_input)
+            except TypeError:
+                _res = None
+        if _res is not None:
+            print(_res)
+    except Exception:
+        traceback.print_exc()
+""")
+                codigo_a_escribir = codigo + wrapper
+        except Exception:
+            # Si falla el parseo, no alteramos el código
+            codigo_a_escribir = codigo
+
     with tempfile.TemporaryDirectory() as carpeta_tmp: #crea un directorio temporal
 
         ruta_archivo = os.path.join(carpeta_tmp, config["archivo"])
-        with open(ruta_archivo, "w") as f:
-            f.write(codigo)
+        with open(ruta_archivo, "w", encoding="utf-8", newline="\n") as f:
+            f.write(codigo_a_escribir)
 
         # determinar memoria y timeout
         mem_flag = f"{memory_mb}m" if memory_mb else "128m"
@@ -154,21 +196,29 @@ def ejecutar_codigo(codigo: str, lenguaje: str, timeout_ms: int = None, memory_m
             }
         
         #error al crear el contenedor
-        except FileNotFoundError:
+        except FileNotFoundError as e:
             #Docker no está instalado o no está en el PATH
             return {
                 "stdout": "",
-                "stderr": "El sistema de ejecución no está disponible. Contacta al administrador.",
+                "stderr": "Docker no está instalado o no está en el PATH. Asegúrate de tener Docker Desktop abierto y en ejecución.",
                 "tipo_error": "sistema",
                 "supero_tiempo_limite": False,
                 "timeout": False
             }
 
-        except Exception:
+        except Exception as e:
             #Cualquier otro fallo relacionado con el contenedor
+            error_msg = str(e)
+            if "image" in error_msg.lower() and "not found" in error_msg.lower():
+                stderr_msg = "Las imágenes de Docker no están disponibles. Ejecuta: docker pull python:3.11-slim eclipse-temurin:17-jdk gcc:13"
+            elif "cannot connect" in error_msg.lower() or "daemon" in error_msg.lower():
+                stderr_msg = "No se puede conectar a Docker. Asegúrate de que Docker Desktop esté abierto y en ejecución."
+            else:
+                stderr_msg = f"Error del sistema: {error_msg}"
+            
             return {
                 "stdout": "",
-                "stderr": "Ocurrió un error al preparar el entorno de ejecución. Intenta de nuevo.",
+                "stderr": stderr_msg,
                 "tipo_error": "sistema",
                 "supero_tiempo_limite": False,
                 "timeout": False

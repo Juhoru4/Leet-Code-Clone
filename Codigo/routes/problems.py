@@ -1,5 +1,7 @@
 from flask import Blueprint, jsonify, request, render_template, redirect, url_for
+from app.auth import require_auth
 from models.problema import Problema
+from models.caso_prueba import CasoPrueba
 
 problems_bp = Blueprint('problems', __name__)
 
@@ -48,3 +50,31 @@ def get_problem(problema_id):
     if problema is None:
         return jsonify({"error": "Problema no encontrado"}), 404
     return jsonify(problema.to_dict()), 200
+
+
+@problems_bp.route('/api/problems/<problema_id>/test-cases', methods=['GET'])
+@require_auth
+def get_test_cases(problema_id):
+    """Retorna los casos de prueba públicos de un problema."""
+    problema = Problema.query.get(problema_id)
+    if problema is None:
+        return jsonify({"error": "Problema no encontrado"}), 404
+
+    casos = CasoPrueba.query.filter_by(
+        problema_id=problema_id,
+        es_publico=True
+    ).order_by(CasoPrueba.orden).all()
+
+    return jsonify({
+        "problema_id": problema_id,
+        "casos": [
+            {
+                "id": caso.id,
+                "descripcion": caso.descripcion,
+                "entrada": caso.entrada,
+                "salida_esperada": caso.salida_esperada,
+                "orden": caso.orden,
+            }
+            for caso in casos
+        ]
+    }), 200

@@ -1,6 +1,6 @@
 import uuid
 from threading import Lock
-from flask import Blueprint, request, jsonify, session, render_template, g
+from flask import Blueprint, request, jsonify, session, render_template, g, current_app
 from services.ejecutor import ejecutar_codigo
 from app.extensions import db
 from models.envio import Envio
@@ -30,7 +30,7 @@ def ver_ejecutar():
 @require_auth
 def ejecutar():
     """Ejecuta código con autenticación Supabase."""
-    datos = request.get_json()
+    datos = request.get_json(silent=True) or {}
 
     codigo      = datos.get("codigo", "")
     lenguaje    = datos.get("lenguaje", "")
@@ -40,7 +40,16 @@ def ejecutar():
         return jsonify({"error": "Faltan datos"}), 400
 
     # Obtener usuario_id desde g.current_user (del decorador require_auth)
-    usuario_id = g.current_user.id
+    usuario_id = getattr(g, "current_user_id", None)
+    if not usuario_id:
+        current_user = getattr(g, "current_user", None)
+        if isinstance(current_user, dict):
+            usuario_id = current_user.get("id") or current_user.get("user_id")
+        elif current_user is not None:
+            usuario_id = getattr(current_user, "id", None)
+
+    if not usuario_id:
+        return jsonify({"error": "No se pudo resolver el usuario autenticado"}), 401
 
     with _lock_ejecuciones:
         if usuario_id in _ejecuciones_activas:
@@ -65,7 +74,10 @@ def ejecutar():
             memory_mb = getattr(problema, 'limite_memoria_mb', None)
 
         # Ejecutar el código usando los límites del problema cuando estén disponibles
-        resultado = ejecutar_codigo(codigo, lenguaje, timeout_ms=timeout_ms, memory_mb=memory_mb)
+        if timeout_ms is None and memory_mb is None:
+            resultado = ejecutar_codigo(codigo, lenguaje)
+        else:
+            resultado = ejecutar_codigo(codigo, lenguaje, timeout_ms=timeout_ms, memory_mb=memory_mb)
 
         # Traducir tipo_error a estado
         tipo_error = resultado.get("tipo_error")
@@ -87,8 +99,13 @@ def ejecutar():
             tiempo_ejecucion_ms = None,
             memoria_usada_kb    = None,
         )
-        db.session.add(envio)
-        db.session.commit()
+        try:
+            db.session.add(envio)
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.exception("No se pudo guardar el envio en BD: %s", str(e))
+            resultado["warning"] = "El codigo se ejecuto, pero no se pudo guardar el envio."
 
         # Agregar el estado al resultado para que el HTML lo muestre
         resultado["estado"] = estado

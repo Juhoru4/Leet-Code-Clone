@@ -229,11 +229,25 @@ def require_auth(f):
             return jsonify({'error': 'missing token'}), 401
 
         try:
-            user = admin_client.auth.get_user(token)
+            user_response = admin_client.auth.get_user(token)
         except Exception:
             return jsonify({'error': 'invalid token'}), 401
 
-        g.current_user = user
+        # Supabase may return different response shapes depending on SDK version.
+        # Normalize here so downstream endpoints always have a stable user_id.
+        user = getattr(user_response, 'user', user_response)
+        user_info = _to_dict(user)
+        user_id = None
+        if isinstance(user_info, dict):
+            user_id = user_info.get('id') or user_info.get('user_id')
+        if not user_id and hasattr(user, 'id'):
+            user_id = getattr(user, 'id')
+
+        if not user_id:
+            return jsonify({'error': 'invalid token payload'}), 401
+
+        g.current_user = user_info if isinstance(user_info, dict) else user
+        g.current_user_id = user_id
         return f(*args, **kwargs)
     wrapper.__name__ = f.__name__
     return wrapper
