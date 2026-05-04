@@ -1,3 +1,4 @@
+from flask import render_template
 from app import create_app
 from app.extensions import db
 from models import Usuario, Categoria, Problema, Envio, ResultadoEnvio, CasoPrueba
@@ -5,6 +6,11 @@ import os
 
 # Crear la aplicación
 app = create_app()
+
+
+@app.route("/problema/<int:problema_id>")
+def problema(problema_id):
+    return render_template("problema.html")
 
 
 @app.shell_context_processor
