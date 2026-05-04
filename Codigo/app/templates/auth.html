@@ -75,8 +75,8 @@
       const body = { email: f.email.value, password: f.password.value, username: f.username.value, full_name: f.full_name.value, role: f.role.value };
       const r = await post('/auth/register', body);
       show(r);
-      if (r && r.user_id && body.username && r.note) {
-        out.textContent += '\n\nNota: el usuario fue ajustado por el servidor para evitar duplicados.';
+      if (r && r.ok) {
+        window.location.href = '/problems/ui';
       }
     });
 
@@ -84,8 +84,17 @@
       e.preventDefault();
       const f = e.target;
       const body = { email: f.email.value, password: f.password.value };
-      const r = await post('/auth/login', body);
-      show(r);
+      const res = await fetch('/auth/login', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      if (res.ok || res.redirected) {
+        window.location.href = '/problems/ui';
+      } else {
+        try { show(await res.json()); } catch(e) { show({ status: res.status }); }
+      }
     });
 
     document.getElementById('btn-logout').addEventListener('click', async () => {
