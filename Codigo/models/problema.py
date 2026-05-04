@@ -37,6 +37,11 @@ class Problema(db.Model):
             'dificultad': self.dificultad,
             'categoria_id': self.categoria_id,
             'categoria': self.categoria.nombre if self.categoria else None,
+            'restricciones': self.restricciones,
+            'ejemplo_entrada': self.ejemplo_entrada,
+            'ejemplo_salida': self.ejemplo_salida,
+            'limite_tiempo_ms': self.limite_tiempo_ms,
+            'limite_memoria_mb': self.limite_memoria_mb,
             'esta_activo': self.esta_activo,
             'creado_el': self.creado_el.isoformat() if self.creado_el else None,
         }

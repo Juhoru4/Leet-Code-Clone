@@ -303,7 +303,7 @@
             filas += `
               <tr>
                 <td style="color:#6b7280">${contador_global++}</td>
-                <td><a class="problem-link" href="#">${escapeHtml(p.titulo)}</a></td>
+                <td><a class="problem-link" href="/problems/${encodeURIComponent(p.id)}/ui">${escapeHtml(p.titulo)}</a></td>
                 <td><span class="categoria-tag">${escapeHtml(p.categoria || '—')}</span></td>
                 <td><span class="badge ${badgeClass}">${label}</span></td>
                 <td><span class="badge ${estadoClass}">${estadoLabel}</span></td>

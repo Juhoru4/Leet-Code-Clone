@@ -3,16 +3,22 @@ from models.problema import Problema
 
 problems_bp = Blueprint('problems', __name__)
 
-#mientras no exista menú principal, la raíz redirige automáticamente a la lista de problemas
+# Mientras no exista menú principal, la raíz redirige al login/registro.
 @problems_bp.route('/')
 def home():
-    return redirect(url_for('problems.index'))
+    return redirect(url_for('auth.ui'))
 
 
 @problems_bp.route('/problems/ui')
 def index():
     """Página principal: lista de problemas (HU2)."""
     return render_template('problems.html')
+
+
+@problems_bp.route('/problems/<problema_id>/ui')
+def resolver_ui(problema_id):
+    """Renderiza la UI de resolución de un problema específico."""
+    return render_template('resolver_problema.html', problema_id=problema_id)
 
 
 @problems_bp.route('/api/problems', methods=['GET'])

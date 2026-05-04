@@ -200,11 +200,10 @@ def login():
 
     resp = make_response(redirect('/problems/ui'))
     secure_cookie = request.is_secure
-    # Set HttpOnly cookies for access and refresh tokens
     resp.set_cookie('access_token', access_token, httponly=True, secure=secure_cookie, samesite='Lax', path='/')
     if refresh_token:
         resp.set_cookie('refresh_token', refresh_token, httponly=True, secure=secure_cookie, samesite='Lax', path='/')
-    return resp, 200
+    return resp 
 
 
 @bp.route('/logout', methods=['POST'])
