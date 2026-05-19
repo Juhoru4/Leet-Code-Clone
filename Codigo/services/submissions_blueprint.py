@@ -10,19 +10,17 @@ from models.resultado_envio import ResultadoEnvio
 
 submissions_bp = Blueprint("submissions", __name__)
 
-
 def inyectar_stdin(codigo, lenguaje, entrada):
     if lenguaje == "python":
         return (
-            f'import sys\n'
-            f'sys.stdin = __import__("io").StringIO({repr(entrada)})\n'
-        ) + codigo
+            f"import sys\n"
+            f"sys.stdin = __import__('io').StringIO({repr(entrada.strip())})\n\n"
+        ) + codigo   # ← de vuelta al INICIO
 
     elif lenguaje in ("java", "cpp"):
         return codigo
 
     return codigo
-
 
 @submissions_bp.route("/test-run", methods=["POST"])
 @require_auth
@@ -53,6 +51,11 @@ def test_run():
     resultados = []
 
     for caso in casos:
+        
+        print(f"DEBUG caso '{caso.descripcion}': entrada={repr(caso.entrada)}")  # ← agrega esto
+        codigo_con_input = inyectar_stdin(codigo, lenguaje, caso.entrada or "")
+    
+    
         codigo_con_input = inyectar_stdin(
             codigo,
             lenguaje,

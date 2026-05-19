@@ -105,7 +105,7 @@ def ejecutar_codigo(codigo: str, lenguaje: str, timeout_ms: int = None, memory_m
 # Auto-generated invocation wrapper
 if __name__ == '__main__':
     import sys, traceback
-    _input = sys.stdin.read()
+    _input = sys.stdin.read().strip()
     try:
         try:
             _res = {fname}()
