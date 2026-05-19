@@ -136,7 +136,8 @@
                 <option value="java">Java</option>
                 <option value="cpp">C++</option>
             </select>
-            <button onclick="ejecutar()" id="btn-ejecutar">▶ Ejecutar</button>
+            <button onclick="probar()" id="btn-probar">🧪 Probar previo a envío</button>
+            <button onclick="ejecutar()" id="btn-ejecutar">▶ Guardar envío</button>
         </div>
 
         <div id="estado-ejecucion"></div>
@@ -208,6 +209,62 @@
             contenedor.textContent = 'No se pudieron cargar los casos de prueba.';
         }
     }
+
+    async function probar() {
+        const codigo = document.getElementById("editor").value;
+        const lenguaje = document.getElementById("selector-lenguaje").value;
+        const btn = document.getElementById("btn-probar");
+        const resultadoDiv = document.getElementById("resultado");
+        const estadoDiv = document.getElementById("estado-ejecucion");
+
+        if (!codigo.trim()) {
+            resultadoDiv.className = "advertencia";
+            resultadoDiv.textContent = "⚠ Escribe algún código antes de probar.";
+            return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = "⏳ Probando...";
+        estadoDiv.className = "ejecutando";
+        estadoDiv.textContent = "Ejecutando contra casos de prueba...";
+        resultadoDiv.className = "";
+        resultadoDiv.textContent = "";
+
+        try {
+            const response = await fetch("/api/submissions/preview", {
+                method: "POST",
+                credentials: "include",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    problema_id: PROBLEMA_ID,
+                    language: lenguaje,
+                    source_code: codigo
+                })
+            });
+
+            const resultado = await response.json();
+                if (!response.ok) {
+                    estadoDiv.className = "error";
+                    estadoDiv.textContent = resultado.error || "No se pudo probar.";
+                    return;
+                }
+
+            estadoDiv.className = "correcto";
+            estadoDiv.textContent = `Pruebas completadas: ${resultado.casos_pasados}/${resultado.total_casos} aprobados.`;
+            mostrarResultado(resultado);
+
+        } 
+        
+        catch (e) {
+            estadoDiv.className = "error";
+            estadoDiv.textContent = "❌ No se pudo conectar con el servidor.";
+        } 
+
+        finally {
+            btn.disabled = false;
+            btn.textContent = "🧪 Probar previo a envío";
+        }
+}
 
     async function ejecutar() {
         const codigo = document.getElementById("editor").value;

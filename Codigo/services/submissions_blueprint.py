@@ -163,3 +163,55 @@ def obtener_resultados(submission_id):
             for resultado in envio.resultados
         ]
     }), 200
+    
+@submissions_bp.route("/preview", methods=["POST"])
+@require_auth
+def preview_run():
+    datos = request.get_json()
+    problema_id = datos.get("problema_id")
+    lenguaje = datos.get("language")
+    codigo = datos.get("source_code")
+
+    if not all([problema_id, lenguaje, codigo]):
+        return jsonify({"error": "Faltan campos"}), 400
+
+    casos = CasoPrueba.query.filter_by(
+        problema_id=problema_id,
+        es_publico=True
+    ).order_by(CasoPrueba.orden).all()
+
+    if not casos:
+        return jsonify({"error": "No hay casos de prueba"}), 404
+
+    resultados = []
+    for caso in casos:
+        codigo_con_input = inyectar_stdin(codigo, lenguaje, caso.entrada or "")
+        resultado = ejecutar_codigo(codigo_con_input, lenguaje)
+
+        output_obtenido = (resultado.get("stdout") or "").strip()
+        salida_esperada = (caso.salida_esperada or "").strip()
+
+        if resultado.get("tipo_error"):
+            estado_caso = "Fallo"
+            output_obtenido = resultado.get("stderr") or "Error de ejecución"
+        elif output_obtenido.replace(" ", "") == salida_esperada.replace(" ", ""):
+            estado_caso = "Aprobado"
+        else:
+            estado_caso = "Fallo"
+
+        resultados.append({
+            "caso_id": caso.id,
+            "descripcion": caso.descripcion,
+            "estado": estado_caso,
+            "output": output_obtenido,
+            "esperado": salida_esperada,
+        })
+
+    casos_pasados = sum(1 for r in resultados if r["estado"] == "Aprobado")
+
+    # NO guarda en Supabase, solo retorna resultados
+    return jsonify({
+        "casos_pasados": casos_pasados,
+        "total_casos": len(casos),
+        "resultado": resultados
+    }), 200
