@@ -84,7 +84,7 @@ def test_run():
                 or "Error de ejecución"
             )
 
-        elif output_obtenido == salida_esperada:
+        elif output_obtenido.replace(" ", "") == salida_esperada.replace(" ", ""):
             estado_caso = "Aprobado"
 
         else:
