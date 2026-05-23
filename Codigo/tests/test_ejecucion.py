@@ -62,7 +62,7 @@ def mock_auth_and_ejecutor(monkeypatch):
         }
 
     monkeypatch.setattr("app.auth.admin_client.auth.get_user", fake_get_user)
-    monkeypatch.setattr("services.submissions_blueprint.ejecutar_codigo", fake_ejecutar_codigo)
+    monkeypatch.setattr("routes.envios.ejecutar_codigo", fake_ejecutar_codigo)
 
 
 @pytest.fixture

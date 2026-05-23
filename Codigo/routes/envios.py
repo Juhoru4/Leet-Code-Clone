@@ -1,8 +1,10 @@
+"""Endpoints para previsualizar y evaluar envios."""
+
 import uuid
 from flask import Blueprint, jsonify, request
 from app.auth import require_auth
 from app.extensions import db
-from services.ejecutor import ejecutar_codigo
+from services.ejecucion.ejecutor import ejecutar_codigo
 from models.envio import Envio
 from models.caso_prueba import CasoPrueba
 from models.resultado_envio import ResultadoEnvio

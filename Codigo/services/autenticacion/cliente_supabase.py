@@ -1,3 +1,5 @@
+"""Crea clientes de Supabase en cache para operaciones de autenticacion."""
+
 from supabase import create_client
 import os
 

@@ -1,5 +1,4 @@
-#Recibe: el codigo y el lenguaje
-#Envia: Resultado de la ejecucion del codigo
+"""Ejecuta codigo de usuario en contenedores aislados y devuelve resultados."""
 
 import subprocess
 import tempfile
