@@ -65,7 +65,7 @@ def build_unique_username(base_username):
 def normalize_role(raw_role):
     role = (raw_role or '').strip().lower()
     if role in {'admin', 'administrador', 'profesor'}:
-        return 'administrador'
+        return 'admin'
     if role == 'estudiante':
         return 'estudiante'
     return 'estudiante'
@@ -183,28 +183,78 @@ def register():
 @bp.route('/login', methods=['POST'])
 def login():
     data = request.get_json() or {}
+
     email = data.get('email')
     password = data.get('password')
+
     if not email or not password:
         return jsonify({'error': 'email and password required'}), 400
 
     try:
-        res = client.auth.sign_in_with_password({'email': email, 'password': password})
+        res = client.auth.sign_in_with_password({
+            'email': email,
+            'password': password
+        })
     except Exception as e:
-        return jsonify({'error': 'supabase signin failed', 'detail': str(e)}), 500
+        return jsonify({
+            'error': 'supabase signin failed',
+            'detail': str(e)
+        }), 500
 
     access_token, refresh_token, expires_at = extract_session_tokens(res)
 
     if not access_token:
-        return jsonify({'error': 'could not retrieve access token', 'detail': res}), 500
+        return jsonify({
+            'error': 'could not retrieve access token',
+            'detail': res
+        }), 500
 
-    resp = make_response(redirect('/problems/ui'))
+    # Obtener user_id
+    res_dict = _to_dict(res)
+
+    user = res_dict.get('user') if isinstance(res_dict, dict) and 'user' in res_dict else res_dict
+    user_dict = _to_dict(user)
+
+    user_id = user_dict.get('id')
+
+    # Buscar perfil
+    perfil = Usuario.query.get(user_id)
+    
+    print(f"DEBUG user_id: {user_id}")
+    print(f"DEBUG perfil: {perfil}")
+    print(f"DEBUG rol: {perfil.rol if perfil else 'sin perfil'}")
+
+    # Redirección por rol
+    redirect_url = '/problems/ui'
+    print("ROL:", perfil.rol)
+
+    if perfil and perfil.rol == 'admin':
+        redirect_url = '/auth/admin/ui'
+
+    resp = make_response(redirect(redirect_url))
+
     secure_cookie = request.is_secure
-    resp.set_cookie('access_token', access_token, httponly=True, secure=secure_cookie, samesite='Lax', path='/')
-    if refresh_token:
-        resp.set_cookie('refresh_token', refresh_token, httponly=True, secure=secure_cookie, samesite='Lax', path='/')
-    return resp 
 
+    resp.set_cookie(
+        'access_token',
+        access_token,
+        httponly=True,
+        secure=secure_cookie,
+        samesite='Lax',
+        path='/'
+    )
+
+    if refresh_token:
+        resp.set_cookie(
+            'refresh_token',
+            refresh_token,
+            httponly=True,
+            secure=secure_cookie,
+            samesite='Lax',
+            path='/'
+        )
+
+    return resp
 
 @bp.route('/logout', methods=['POST'])
 def logout():
@@ -276,6 +326,17 @@ def me():
         profile = None
 
     return jsonify({'user': user_info, 'profile': profile}), 200
+
+@bp.route('/admin/ui')
+@require_auth
+def admin_ui():
+
+    perfil = Usuario.query.get(g.current_user_id)
+
+    if not perfil or perfil.rol != 'admin':
+        return redirect('/auth/ui')
+
+    return render_template('admin.html')
 
 
 @bp.route('/ui', methods=['GET'])

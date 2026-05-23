@@ -1,7 +1,9 @@
-from flask import Blueprint, jsonify, request, render_template, redirect, url_for
+from flask import Blueprint, jsonify, request, render_template, redirect, url_for, g
 from app.auth import require_auth
 from models.problema import Problema
 from models.caso_prueba import CasoPrueba
+import uuid
+from app.extensions import db
 
 problems_bp = Blueprint('problems', __name__)
 
@@ -78,3 +80,30 @@ def get_test_cases(problema_id):
             for caso in casos
         ]
     }), 200
+    
+@problems_bp.route('/api/problems/crear', methods=['POST'])
+@require_auth
+def crear_problema():
+    data = request.get_json()
+
+    nuevo_problema = Problema(
+        id=str(uuid.uuid4()),
+        titulo=data.get('titulo'),
+        descripcion=data.get('descripcion'),
+        dificultad=data.get('dificultad'),
+        restricciones=data.get('restricciones'),
+        ejemplo_entrada=data.get('ejemplo_entrada'),
+        ejemplo_salida=data.get('ejemplo_salida'),
+        limite_tiempo_ms=data.get('limite_tiempo_ms'),
+        limite_memoria_mb=data.get('limite_memoria_mb'),
+        esta_activo=True,
+        creado_por=g.current_user_id
+    )
+
+    db.session.add(nuevo_problema)
+    db.session.commit()
+
+    return jsonify({
+        "mensaje": "Problema creado",
+        "problema": nuevo_problema.to_dict()
+    }), 201

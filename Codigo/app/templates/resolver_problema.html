@@ -10,7 +10,15 @@
 
         .panel-problema { width: 40%; overflow-y: auto; }
 
-        .panel-editor { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+        /* Panel editor: columna flex con altura fija heredada del contenedor */
+        .panel-editor {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-height: 0;       /* clave: permite que flex children respeten el límite */
+            overflow: hidden;    /* evita que el panel crezca fuera del contenedor */
+        }
 
         .casos-prueba {
             margin-top: 12px;
@@ -36,18 +44,52 @@
             overflow-x: auto;
         }
 
-        textarea { flex: 1; width: 100%; font-family: monospace; font-size: 14px; padding: 8px; resize: none; }
+        /* El textarea ocupa el espacio disponible pero nunca menos de 200px */
+        textarea {
+            flex: 1 1 0;
+            min-height: 200px;
+            width: 100%;
+            font-family: monospace;
+            font-size: 14px;
+            padding: 8px;
+            resize: none;
+            box-sizing: border-box;
+        }
 
         select, button { padding: 6px 12px; font-size: 14px; }
 
-        #resultado { background: #f4f4f4; padding: 10px; min-height: 80px; white-space: pre-wrap; font-family: monospace; font-size: 13px; }
+        /* Sección resultado: altura fija + scroll, nunca empuja al editor */
+        .resultado-wrapper {
+            flex: 0 0 auto;
+            max-height: 35%;
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
 
-        #estado-ejecucion { min-height: 20px; font-size: 13px; font-weight: 600; }
+        .resultado-wrapper strong {
+            flex-shrink: 0;
+            display: block;
+            margin-bottom: 4px;
+        }
 
-        .correcto   { color: green; }
-        .error      { color: red; }
-        .advertencia{ color: orange; }
-        .ejecutando { color: #b36b00; }
+        #resultado {
+            background: #f4f4f4;
+            padding: 10px;
+            flex: 1;
+            overflow-y: auto;   /* scroll en lugar de crecer */
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 13px;
+        }
+
+        #estado-ejecucion { flex-shrink: 0; min-height: 20px; font-size: 13px; font-weight: 600; }
+
+        .correcto    { color: green; }
+        .error       { color: red; }
+        .advertencia { color: orange; }
+        .ejecutando  { color: #b36b00; }
     </style>
 </head>
 <body>
@@ -88,21 +130,21 @@
     </div>
 
     <div class="panel-editor">
-        <div>
+        <div style="flex-shrink:0;">
             <select id="selector-lenguaje">
                 <option value="python">Python</option>
                 <option value="java">Java</option>
                 <option value="cpp">C++</option>
             </select>
-            <button onclick="ejecutar()" id="btn-ejecutar">▶ Ejecutar</button>
-            <button onclick="enviarIntento()" id="btn-enviar" style="display:none; margin-left:8px;">📤 Enviar intento</button>
+            <button onclick="probar()" id="btn-probar">🧪 Probar previo a envío</button>
+            <button onclick="ejecutar()" id="btn-ejecutar">▶ Guardar envío</button>
         </div>
 
         <div id="estado-ejecucion"></div>
 
         <textarea id="editor" placeholder="Escribe tu solución aquí..."></textarea>
 
-        <div>
+        <div class="resultado-wrapper">
             <strong>Resultado:</strong>
             <div id="resultado">Ejecuta tu código para ver el resultado.</div>
         </div>
@@ -137,8 +179,7 @@
             document.getElementById('ejemplo_entrada').textContent = p.ejemplo_entrada || '—';
             document.getElementById('ejemplo_salida').textContent = p.ejemplo_salida || '—';
 
-            // Precargamos el editor con la entrada de ejemplo para facilitar pruebas manuales.
-            if (p.ejemplo_entrada) document.getElementById('editor').value = '# Ejemplo entrada:\n' + p.ejemplo_entrada + '\n\n';
+            // No prefill: inyectar la entrada en el editor contaminaría el código enviado al ejecutor
 
         } catch (err) {
             // Si falla la API, mostramos un estado de error legible en vez de dejar la vista vacía.
@@ -176,6 +217,62 @@
             contenedor.textContent = 'No se pudieron cargar los casos de prueba.';
         }
     }
+
+    async function probar() {
+        const codigo = document.getElementById("editor").value;
+        const lenguaje = document.getElementById("selector-lenguaje").value;
+        const btn = document.getElementById("btn-probar");
+        const resultadoDiv = document.getElementById("resultado");
+        const estadoDiv = document.getElementById("estado-ejecucion");
+
+        if (!codigo.trim()) {
+            resultadoDiv.className = "advertencia";
+            resultadoDiv.textContent = "⚠ Escribe algún código antes de probar.";
+            return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = "⏳ Probando...";
+        estadoDiv.className = "ejecutando";
+        estadoDiv.textContent = "Ejecutando contra casos de prueba...";
+        resultadoDiv.className = "";
+        resultadoDiv.textContent = "";
+
+        try {
+            const response = await fetch("/api/submissions/preview", {
+                method: "POST",
+                credentials: "include",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    problema_id: PROBLEMA_ID,
+                    language: lenguaje,
+                    source_code: codigo
+                })
+            });
+
+            const resultado = await response.json();
+                if (!response.ok) {
+                    estadoDiv.className = "error";
+                    estadoDiv.textContent = resultado.error || "No se pudo probar.";
+                    return;
+                }
+
+            estadoDiv.className = "correcto";
+            estadoDiv.textContent = `Pruebas completadas: ${resultado.casos_pasados}/${resultado.total_casos} aprobados.`;
+            mostrarResultado(resultado);
+
+        } 
+        
+        catch (e) {
+            estadoDiv.className = "error";
+            estadoDiv.textContent = "❌ No se pudo conectar con el servidor.";
+        } 
+
+        finally {
+            btn.disabled = false;
+            btn.textContent = "🧪 Probar previo a envío";
+        }
+}
 
     async function ejecutar() {
         // Tomamos el código escrito por el usuario y el lenguaje seleccionado.
