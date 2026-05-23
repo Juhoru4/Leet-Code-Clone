@@ -28,7 +28,7 @@
         <label for="reg-role">Rol</label>
         <select id="reg-role" name="role">
           <option value="estudiante">Estudiante</option>
-          <option value="administrador">Administrador</option>
+          <option value="admin">Administrador</option>
         </select>
 
         <button type="submit">Registrarse</button>
@@ -75,8 +75,8 @@
       const body = { email: f.email.value, password: f.password.value, username: f.username.value, full_name: f.full_name.value, role: f.role.value };
       const r = await post('/auth/register', body);
       show(r);
-      if (r && r.ok) {
-        window.location.href = '/problems/ui';
+      if (r && r.redirect_url) {
+        window.location.href = r.redirect_url;
       }
     });
 
@@ -90,11 +90,11 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       });
-      if (res.ok || res.redirected) {
+      if (res.redirected) {
+        window.location.href = res.url;
+      } else if (res.ok) {
         window.location.href = '/problems/ui';
-      } else {
-        try { show(await res.json()); } catch(e) { show({ status: res.status }); }
-      }
+}
     });
 
     document.getElementById('btn-logout').addEventListener('click', async () => {
