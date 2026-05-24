@@ -1,3 +1,5 @@
+"""Endpoints para listar problemas y obtener su informacion."""
+
 from flask import Blueprint, jsonify, request, render_template, redirect, url_for, g
 from app.auth import require_auth
 from models.problema import Problema

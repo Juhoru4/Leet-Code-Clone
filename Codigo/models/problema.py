@@ -13,6 +13,9 @@ class Problema(db.Model):
     restricciones = db.Column(db.Text, nullable=True)
     ejemplo_entrada = db.Column(db.Text, nullable=True)
     ejemplo_salida = db.Column(db.Text, nullable=True)
+    codigo_base_python = db.Column(db.Text, nullable=True)
+    codigo_base_java = db.Column(db.Text, nullable=True)
+    codigo_base_cpp = db.Column(db.Text, nullable=True)
     limite_tiempo_ms = db.Column(db.Integer, nullable=True)
     limite_memoria_mb = db.Column(db.Integer, nullable=True)
     esta_activo = db.Column(db.Boolean, default=True)
@@ -40,6 +43,9 @@ class Problema(db.Model):
             'restricciones': self.restricciones,
             'ejemplo_entrada': self.ejemplo_entrada,
             'ejemplo_salida': self.ejemplo_salida,
+            'codigo_base_python': self.codigo_base_python,
+            'codigo_base_java': self.codigo_base_java,
+            'codigo_base_cpp': self.codigo_base_cpp,
             'limite_tiempo_ms': self.limite_tiempo_ms,
             'limite_memoria_mb': self.limite_memoria_mb,
             'esta_activo': self.esta_activo,

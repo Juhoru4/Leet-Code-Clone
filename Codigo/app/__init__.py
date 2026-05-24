@@ -27,23 +27,23 @@ def create_app(database_uri=None):
         print(f"Error registrando auth blueprint: {e}")
 
     try:
-        from routes.ejecucion_endpoint import ejecucion_bp
+        from routes.ejecucion import ejecucion_bp
         app.register_blueprint(ejecucion_bp)
     except Exception as e:
         print(f"Error registrando ejecucion blueprint: {e}")
 
     # Problemas: UI/listado y detalle/casos
     try:
-        from routes.problems import problems_bp as problems_ui_bp
+        from routes.problemas import problems_bp as problems_ui_bp
         app.register_blueprint(problems_ui_bp)
     except Exception as e:
-        print(f"Error registrando problems ui blueprint: {e}")
+        print(f"Error registrando problemas blueprint: {e}")
 
     # Submissions
     try:
-        from services.submissions_blueprint import submissions_bp
+        from routes.envios import submissions_bp
         app.register_blueprint(submissions_bp, url_prefix="/api/submissions")
     except Exception as e:
-        print(f"Error registrando submissions blueprint: {e}")
+        print(f"Error registrando envios blueprint: {e}")
 
     return app
