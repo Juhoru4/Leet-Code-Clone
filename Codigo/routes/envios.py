@@ -12,6 +12,13 @@ from models.resultado_envio import ResultadoEnvio
 
 submissions_bp = Blueprint("submissions", __name__)
 
+def normalizar_salida_booleana(valor: str) -> str:
+    limpio = (valor or "").strip()
+    lower = limpio.lower()
+    if lower in ("true", "false"):
+        return lower
+    return limpio
+
 def inyectar_stdin(codigo, lenguaje, entrada):
     if lenguaje == "python":
         return (
@@ -84,16 +91,18 @@ def test_run():
         ).strip()
 
         # Si el ejecutor reporta un error, el caso falla aunque haya salida parcial.
+        tipo_error = None
         if resultado.get("tipo_error"):
             estado_caso = "Fallo"
-
-            output_obtenido = (
+            tipo_error = resultado.get("tipo_error")
+            detalle_error = (
                 resultado.get("stderr")
                 or resultado.get("error")
                 or "Error de ejecución"
             )
+            output_obtenido = detalle_error
 
-        elif output_obtenido.replace(" ", "") == salida_esperada.replace(" ", ""):
+        elif normalizar_salida_booleana(output_obtenido).replace(" ", "") == normalizar_salida_booleana(salida_esperada).replace(" ", ""):
             estado_caso = "Aprobado"
 
         else:
@@ -104,6 +113,7 @@ def test_run():
             "caso_id": caso.id,
             "descripcion": caso.descripcion,
             "estado": estado_caso,
+            "tipo_error": tipo_error,
             "output": output_obtenido,
             "esperado": salida_esperada,
             "tiempo_ejecucion_ms": resultado.get("time_ms"),
@@ -202,10 +212,13 @@ def preview_run():
         output_obtenido = (resultado.get("stdout") or "").strip()
         salida_esperada = (caso.salida_esperada or "").strip()
 
+        tipo_error = None
         if resultado.get("tipo_error"):
             estado_caso = "Fallo"
-            output_obtenido = resultado.get("stderr") or "Error de ejecución"
-        elif output_obtenido.replace(" ", "") == salida_esperada.replace(" ", ""):
+            tipo_error = resultado.get("tipo_error")
+            detalle_error = resultado.get("stderr") or "Error de ejecución"
+            output_obtenido = detalle_error
+        elif normalizar_salida_booleana(output_obtenido).replace(" ", "") == normalizar_salida_booleana(salida_esperada).replace(" ", ""):
             estado_caso = "Aprobado"
         else:
             estado_caso = "Fallo"
@@ -214,6 +227,7 @@ def preview_run():
             "caso_id": caso.id,
             "descripcion": caso.descripcion,
             "estado": estado_caso,
+            "tipo_error": tipo_error,
             "output": output_obtenido,
             "esperado": salida_esperada,
         })

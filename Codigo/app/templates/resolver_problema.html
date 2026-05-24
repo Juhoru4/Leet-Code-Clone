@@ -469,9 +469,10 @@
             for (const caso of resultado.resultado) {
                 const color = caso.estado === "Aprobado" ? "green" : "red";
                 const icono = caso.estado === "Aprobado" ? "✅" : "❌";
+                const etiquetaError = caso.tipo_error ? ", tipo de error: " + caso.tipo_error : "";
                 html += `
                 <div style="border:1px solid ${color}; border-radius:6px; padding:8px; margin:6px 0; color:${color}">
-                    ${icono} <strong>${caso.descripcion || "Caso " + caso.caso_id}</strong>: ${caso.estado}
+                    ${icono} <strong>${caso.descripcion || "Caso " + caso.caso_id}</strong>: ${caso.estado}${etiquetaError}
                     <br><small style="color:#555">Esperado: <code>${caso.esperado}</code> — Obtenido: <code>${caso.output}</code></small>
                 </div>`;
             }
