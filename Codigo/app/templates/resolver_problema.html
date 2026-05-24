@@ -157,11 +157,30 @@
     // eslint-disable-next-line
     const PROBLEMA_ID = {{ problema_id | tojson }};
 
+    let codigoBasePorLenguaje = {};
+    let codigoBaseActual = null;
+
     //cuando termina de cargar la página, pedimos los datos del problema y los casos de prueba
     window.addEventListener('DOMContentLoaded', () => {
         cargarProblema();
         cargarCasosPrueba();
+        const selector = document.getElementById('selector-lenguaje');
+        selector.addEventListener('change', () => {
+            aplicarCodigoBase(selector.value);
+        });
     });
+
+    function aplicarCodigoBase(lenguaje) {
+        const editor = document.getElementById('editor');
+        const nuevoCodigo = codigoBasePorLenguaje[lenguaje] || '';
+
+        if (!editor) return;
+
+        if (!editor.value.trim() || editor.value === codigoBaseActual) {
+            editor.value = nuevoCodigo;
+            codigoBaseActual = nuevoCodigo;
+        }
+    }
 
     async function cargarProblema() {
         try {
@@ -179,7 +198,13 @@
             document.getElementById('ejemplo_entrada').textContent = p.ejemplo_entrada || '—';
             document.getElementById('ejemplo_salida').textContent = p.ejemplo_salida || '—';
 
-            // No prefill: inyectar la entrada en el editor contaminaría el código enviado al ejecutor
+            codigoBasePorLenguaje = {
+                python: p.codigo_base_python || '',
+                java: p.codigo_base_java || '',
+                cpp: p.codigo_base_cpp || '',
+            };
+
+            aplicarCodigoBase(document.getElementById('selector-lenguaje').value);
 
         } catch (err) {
             // Si falla la API, mostramos un estado de error legible en vez de dejar la vista vacía.
