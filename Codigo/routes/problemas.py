@@ -1,11 +1,11 @@
 """Endpoints para listar problemas y obtener su informacion."""
 
 from flask import Blueprint, jsonify, request, render_template, redirect, url_for, g
-from app.auth import require_auth
-from models.problema import Problema
-from models.caso_prueba import CasoPrueba
+from Codigo.app.auth import require_auth
+from Codigo.models.problema import Problema
+from Codigo.models.caso_prueba import CasoPrueba
 import uuid
-from app.extensions import db
+from Codigo.app.extensions import db
 
 problems_bp = Blueprint('problems', __name__)
 

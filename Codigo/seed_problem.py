@@ -1,8 +1,16 @@
 import uuid
-from app import create_app
-from app.extensions import db
-from models.problema import Problema
-from models.categoria import Categoria
+
+# Compatibilidad de ejecucion: modulo y script directo.
+try:
+    from Codigo.app import create_app
+    from Codigo.app.extensions import db
+    from Codigo.models.problema import Problema
+    from Codigo.models.categoria import Categoria
+except ModuleNotFoundError:
+    from app import create_app
+    from app.extensions import db
+    from models.problema import Problema
+    from models.categoria import Categoria
 
 app = create_app()
 

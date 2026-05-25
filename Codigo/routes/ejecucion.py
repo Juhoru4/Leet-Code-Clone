@@ -3,11 +3,11 @@
 import uuid
 from threading import Lock
 from flask import Blueprint, request, jsonify, session, render_template, g, current_app
-from services.ejecucion.ejecutor import ejecutar_codigo
-from app.extensions import db
-from models.envio import Envio
-from app.auth import require_auth
-from models.problema import Problema
+from Codigo.services.ejecucion.ejecutor import ejecutar_codigo
+from Codigo.app.extensions import db
+from Codigo.models.envio import Envio
+from Codigo.app.auth import require_auth
+from Codigo.models.problema import Problema
 
 ejecucion_bp = Blueprint("ejecucion", __name__)
 _ejecuciones_activas = set()

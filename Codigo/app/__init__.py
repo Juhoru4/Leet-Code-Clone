@@ -21,27 +21,27 @@ def create_app(database_uri=None):
 
     # Auth y ejecución
     try:
-        from .auth import bp as auth_bp
+        from Codigo.app.auth import bp as auth_bp
         app.register_blueprint(auth_bp)
     except Exception as e:
         print(f"Error registrando auth blueprint: {e}")
 
     try:
-        from routes.ejecucion import ejecucion_bp
+        from Codigo.routes.ejecucion import ejecucion_bp
         app.register_blueprint(ejecucion_bp)
     except Exception as e:
         print(f"Error registrando ejecucion blueprint: {e}")
 
     # Problemas: UI/listado y detalle/casos
     try:
-        from routes.problemas import problems_bp as problems_ui_bp
+        from Codigo.routes.problemas import problems_bp as problems_ui_bp
         app.register_blueprint(problems_ui_bp)
     except Exception as e:
         print(f"Error registrando problemas blueprint: {e}")
 
     # Submissions
     try:
-        from routes.envios import submissions_bp
+        from Codigo.routes.envios import submissions_bp
         app.register_blueprint(submissions_bp, url_prefix="/api/submissions")
     except Exception as e:
         print(f"Error registrando envios blueprint: {e}")

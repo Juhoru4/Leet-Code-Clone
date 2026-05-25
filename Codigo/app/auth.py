@@ -1,11 +1,11 @@
 from flask import Blueprint, redirect, request, jsonify, g, make_response, render_template
-from services.autenticacion.cliente_supabase import get_client, get_admin_client, SUPABASE_URL, SUPABASE_ANON_KEY
+from Codigo.services.autenticacion.cliente_supabase import get_client, get_admin_client, SUPABASE_URL, SUPABASE_ANON_KEY
 import httpx
 import os
 from flask import current_app
 import traceback
-from app.extensions import db
-from models import Usuario
+from Codigo.app.extensions import db
+from Codigo.models.usuario import Usuario
 from datetime import datetime
 from sqlalchemy.exc import IntegrityError
 
