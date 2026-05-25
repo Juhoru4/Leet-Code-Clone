@@ -1,111 +1,169 @@
-<!doctype html>
-<html lang="es">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Auth UI - Pruebas</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='auth.css') }}">
-</head>
-<body>
-  <main class="container">
-    <h1>Pruebas de Autenticación</h1>
+{% extends "base.html" %}
 
-    <section class="card">
-      <h2>Register</h2>
-      <form id="register-form">
-        <label for="reg-email">Correo electrónico</label>
-        <input id="reg-email" name="email" placeholder="correo@ejemplo.com" required />
+{% block title %}Acceso - CodeChallenge{% endblock %}
 
-        <label for="reg-password">Contraseña</label>
-        <input id="reg-password" name="password" type="password" placeholder="Contraseña" required />
+{% block content %}
+<section class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-8 lg:gap-10">
+  <div class="md:col-span-5 space-y-8">
+    <div class="bg-slate-900/60 backdrop-blur-xl border border-slate-800/50 rounded-3xl p-8">
+      <p class="text-xs uppercase tracking-[0.2em] text-slate-500 mb-3">Plataforma</p>
+      <h1 class="font-extrabold tracking-tight text-white text-4xl md:text-5xl leading-tight">
+        Resuelve retos con una experiencia
+        <span class="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-sky-400 to-emerald-400">moderna</span>
+      </h1>
+      <p class="mt-4 text-base text-slate-400 leading-relaxed">
+        Crea tu cuenta, inicia sesión y comienza a practicar problemas de programación con feedback inmediato.
+      </p>
+    </div>
 
-        <label for="reg-username">Nombre de usuario</label>
-        <input id="reg-username" name="username" placeholder="ej: juan123" required />
+    <div class="bg-slate-900/40 backdrop-blur-md border border-white/5 shadow-2xl rounded-3xl p-6">
+      <h2 class="text-lg font-semibold text-white mb-4">Herramientas rápidas</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <button id="btn-logout" class="px-5 py-3 rounded-xl border border-slate-700 bg-slate-900/50 text-slate-300 hover:bg-slate-800 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(99,102,241,0.3)]">Cerrar sesión</button>
+        <button id="btn-me" class="px-5 py-3 rounded-xl border border-slate-700 bg-slate-900/50 text-slate-300 hover:bg-slate-800 transition-all duration-300 transform hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(99,102,241,0.3)]">Ver sesión</button>
+      </div>
+    </div>
+  </div>
 
-        <label for="reg-full-name">Nombre completo</label>
-        <input id="reg-full-name" name="full_name" placeholder="ej: Juan Pérez" />
-
-        <label for="reg-role">Rol</label>
-        <select id="reg-role" name="role">
-          <option value="estudiante">Estudiante</option>
-          <option value="admin">Administrador</option>
-        </select>
-
-        <button type="submit">Registrarse</button>
+  <div class="md:col-span-7 space-y-8">
+    <div class="bg-slate-900/60 backdrop-blur-xl border border-slate-800/50 rounded-3xl p-8">
+      <h2 class="font-extrabold tracking-tight text-white text-2xl mb-6">Crear cuenta</h2>
+      <form id="register-form" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="sm:col-span-2">
+          <label for="reg-email" class="block mb-2 text-sm text-slate-300">Correo electrónico</label>
+          <input id="reg-email" name="email" type="email" required placeholder="correo@ejemplo.com" class="w-full rounded-xl border border-slate-700 bg-slate-900/50 px-4 py-3 text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+        <div class="sm:col-span-2">
+          <label for="reg-password" class="block mb-2 text-sm text-slate-300">Contraseña</label>
+          <input id="reg-password" name="password" type="password" required placeholder="Min. 8 caracteres" class="w-full rounded-xl border border-slate-700 bg-slate-900/50 px-4 py-3 text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+        <div>
+          <label for="reg-username" class="block mb-2 text-sm text-slate-300">Usuario</label>
+          <input id="reg-username" name="username" required placeholder="juan123" class="w-full rounded-xl border border-slate-700 bg-slate-900/50 px-4 py-3 text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+        <div>
+          <label for="reg-role" class="block mb-2 text-sm text-slate-300">Rol</label>
+          <select id="reg-role" name="role" class="w-full rounded-xl border border-slate-700 bg-slate-900/50 px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="estudiante">Estudiante</option>
+            <option value="admin">Administrador</option>
+          </select>
+        </div>
+        <div class="sm:col-span-2">
+          <label for="reg-full-name" class="block mb-2 text-sm text-slate-300">Nombre completo</label>
+          <input id="reg-full-name" name="full_name" placeholder="Juan Pérez" class="w-full rounded-xl border border-slate-700 bg-slate-900/50 px-4 py-3 text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+        <div class="sm:col-span-2">
+          <button type="submit" class="w-full bg-gradient-to-r from-indigo-500 to-cyan-500 text-white font-medium px-6 py-3 rounded-xl transition-all duration-300 transform hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(99,102,241,0.3)]">Registrarse</button>
+        </div>
       </form>
-    </section>
+    </div>
 
-    <section class="card">
-      <h2>Login</h2>
-      <form id="login-form">
-        <input name="email" placeholder="Email" required />
-        <input name="password" type="password" placeholder="Password" required />
-        <button type="submit">Login</button>
+    <div class="bg-slate-900/60 backdrop-blur-xl border border-slate-800/50 rounded-3xl p-8">
+      <h2 class="font-extrabold tracking-tight text-white text-2xl mb-6">Iniciar sesión</h2>
+      <form id="login-form" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="sm:col-span-2">
+          <label class="block mb-2 text-sm text-slate-300">Email</label>
+          <input name="email" type="email" required placeholder="correo@ejemplo.com" class="w-full rounded-xl border border-slate-700 bg-slate-900/50 px-4 py-3 text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+        <div class="sm:col-span-2">
+          <label class="block mb-2 text-sm text-slate-300">Password</label>
+          <input name="password" type="password" required placeholder="Tu contraseña" class="w-full rounded-xl border border-slate-700 bg-slate-900/50 px-4 py-3 text-slate-200 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+        <div class="sm:col-span-2">
+          <button type="submit" class="w-full bg-gradient-to-r from-indigo-500 to-cyan-500 text-white font-medium px-6 py-3 rounded-xl transition-all duration-300 transform hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(99,102,241,0.3)]">Login</button>
+        </div>
       </form>
-    </section>
+    </div>
 
-    <section class="card actions">
-      <button id="btn-logout">Logout</button>
-      <button id="btn-me">Get /auth/me</button>
-    </section>
+    <div class="bg-slate-900/40 backdrop-blur-md border border-white/5 shadow-2xl rounded-3xl p-6">
+      <h3 class="text-white font-semibold mb-3">Salida</h3>
+      <pre id="output" class="rounded-xl border border-slate-800 bg-slate-950/80 p-4 text-xs sm:text-sm text-slate-300 overflow-x-auto">(sin actividad)</pre>
+    </div>
+  </div>
+</section>
 
-    <section class="card">
-      <h2>Output</h2>
-      <pre id="output">(sin actividad)</pre>
-    </section>
-  </main>
+<script>
+  const out = document.getElementById('output');
 
-  <script>
-    const out = document.getElementById('output');
-    function show(obj){ out.textContent = JSON.stringify(obj, null, 2); }
+  function show(obj) {
+    out.textContent = JSON.stringify(obj, null, 2);
+  }
 
-    async function post(path, body){
-      const res = await fetch(path, {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      });
-      try { return await res.json(); } catch(e){ return { status: res.status }; }
+  async function post(path, body) {
+    const res = await fetch(path, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    try {
+      return await res.json();
+    } catch (e) {
+      return { status: res.status };
+    }
+  }
+
+  document.getElementById('register-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = e.target;
+    const body = {
+      email: f.email.value,
+      password: f.password.value,
+      username: f.username.value,
+      full_name: f.full_name.value,
+      role: f.role.value
+    };
+    const r = await post('/auth/register', body);
+    show(r);
+    if (r && r.redirect_url) {
+      window.location.href = r.redirect_url;
+    }
+  });
+
+  document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = e.target;
+    const body = { email: f.email.value, password: f.password.value };
+    const res = await fetch('/auth/login', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+
+    if (res.redirected) {
+      window.location.href = res.url;
+      return;
     }
 
-    document.getElementById('register-form').addEventListener('submit', async e => {
-      e.preventDefault();
-      const f = e.target;
-      const body = { email: f.email.value, password: f.password.value, username: f.username.value, full_name: f.full_name.value, role: f.role.value };
-      const r = await post('/auth/register', body);
-      show(r);
-      if (r && r.redirect_url) {
-        window.location.href = r.redirect_url;
-      }
-    });
+    if (res.ok) {
+      window.location.href = '/problems/ui';
+      return;
+    }
 
-    document.getElementById('login-form').addEventListener('submit', async e => {
-      e.preventDefault();
-      const f = e.target;
-      const body = { email: f.email.value, password: f.password.value };
-      const res = await fetch('/auth/login', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      });
-      if (res.redirected) {
-        window.location.href = res.url;
-      } else if (res.ok) {
-        window.location.href = '/problems/ui';
-}
-    });
+    try {
+      show(await res.json());
+    } catch (e) {
+      show({ status: res.status });
+    }
+  });
 
-    document.getElementById('btn-logout').addEventListener('click', async () => {
-      const res = await fetch('/auth/logout', { method: 'POST', credentials: 'include' });
-      try{ show(await res.json()); } catch(e){ show({ status: res.status }); }
-    });
+  document.getElementById('btn-logout').addEventListener('click', async () => {
+    const res = await fetch('/auth/logout', { method: 'POST', credentials: 'include' });
+    try {
+      show(await res.json());
+    } catch (e) {
+      show({ status: res.status });
+    }
+  });
 
-    document.getElementById('btn-me').addEventListener('click', async () => {
-      const res = await fetch('/auth/me', { method: 'GET', credentials: 'include' });
-      try{ show(await res.json()); } catch(e){ show({ status: res.status }); }
-    });
-  </script>
-</body>
-</html>
+  document.getElementById('btn-me').addEventListener('click', async () => {
+    const res = await fetch('/auth/me', { method: 'GET', credentials: 'include' });
+    try {
+      show(await res.json());
+    } catch (e) {
+      show({ status: res.status });
+    }
+  });
+</script>
+{% endblock %}

@@ -1,166 +1,91 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Resolver problema</title>
-    <style>
-        body { font-family: sans-serif; margin: 20px; }
+{% extends "base.html" %}
 
-        .contenedor { display: flex; gap: 20px; height: 80vh; }
+{% block title %}Resolver Problema - CodeChallenge{% endblock %}
 
-        .panel-problema { width: 40%; overflow-y: auto; }
-
-        /* Panel editor: columna flex con altura fija heredada del contenedor */
-        .panel-editor {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            min-height: 0;       /* clave: permite que flex children respeten el límite */
-            overflow: hidden;    /* evita que el panel crezca fuera del contenedor */
-        }
-
-        .casos-prueba {
-            margin-top: 12px;
-            border-top: 1px solid #ddd;
-            padding-top: 12px;
-        }
-
-        .caso-item {
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 10px;
-            margin: 8px 0;
-            background: #fff;
-        }
-
-        .caso-item strong { display: block; margin-bottom: 6px; }
-
-        .caso-item pre {
-            margin: 6px 0 0;
-            padding: 8px;
-            background: #f8f8f8;
-            white-space: pre-wrap;
-            overflow-x: auto;
-        }
-
-        /* El textarea ocupa el espacio disponible pero nunca menos de 200px */
-        textarea {
-            flex: 1 1 0;
-            min-height: 200px;
-            width: 100%;
-            font-family: monospace;
-            font-size: 14px;
-            padding: 8px;
-            resize: none;
-            box-sizing: border-box;
-        }
-
-        select, button { padding: 6px 12px; font-size: 14px; }
-
-        /* Sección resultado: altura fija + scroll, nunca empuja al editor */
-        .resultado-wrapper {
-            flex: 0 0 auto;
-            max-height: 35%;
-            min-height: 80px;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        .resultado-wrapper strong {
-            flex-shrink: 0;
-            display: block;
-            margin-bottom: 4px;
-        }
-
-        #resultado {
-            background: #f4f4f4;
-            padding: 10px;
-            flex: 1;
-            overflow-y: auto;   /* scroll en lugar de crecer */
-            white-space: pre-wrap;
-            font-family: monospace;
-            font-size: 13px;
-        }
-
-        #estado-ejecucion { flex-shrink: 0; min-height: 20px; font-size: 13px; font-weight: 600; }
-
-        .correcto    { color: green; }
-        .error       { color: red; }
-        .advertencia { color: orange; }
-        .ejecutando  { color: #b36b00; }
-    </style>
-</head>
-<body>
-
-<h2 id="titulo-problema">Cargando…</h2>
-<div id="meta" style="color:gray; font-size:14px"></div>
-<hr>
-
-<div class="contenedor">
-
-    <div class="panel-problema">
-        <div id="descripcion">Cargando descripción…</div>
-
-        <hr>
+{% block content %}
+<section class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-8">
+    <aside class="md:col-span-5 bg-slate-900/60 backdrop-blur-xl border border-slate-800/50 rounded-3xl p-6 sm:p-8 space-y-6 max-h-[78vh] overflow-y-auto">
         <div>
-            <strong>Categoría:</strong> <span id="categoria">—</span><br>
-            <strong>Dificultad:</strong> <span id="dificultad">—</span>
+            <h1 id="titulo-problema" class="font-extrabold tracking-tight text-white text-3xl md:text-4xl">Cargando...</h1>
+            <p id="meta" class="mt-3 text-sm text-slate-500"></p>
         </div>
 
-        <hr>
         <div>
-            <strong>Restricciones:</strong>
-            <pre id="restricciones" style="background:#f8f8f8; padding:8px;">—</pre>
+            <h2 class="text-slate-300 text-sm uppercase tracking-[0.15em] mb-2">Descripción</h2>
+            <div id="descripcion" class="text-base text-slate-300 leading-relaxed"></div>
         </div>
 
-        <hr>
-        <div>
-            <strong>Ejemplo - Entrada:</strong>
-            <pre id="ejemplo_entrada" style="background:#f0f0f0; padding:8px;">—</pre>
-            <strong>Ejemplo - Salida:</strong>
-            <pre id="ejemplo_salida" style="background:#f0f0f0; padding:8px;">—</pre>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="rounded-2xl border border-slate-800 bg-slate-950/40 p-4">
+                <h3 class="text-xs uppercase tracking-[0.15em] text-slate-500">Categoría</h3>
+                <p id="categoria" class="mt-2 text-slate-200">-</p>
+            </div>
+            <div class="rounded-2xl border border-slate-800 bg-slate-950/40 p-4">
+                <h3 class="text-xs uppercase tracking-[0.15em] text-slate-500">Dificultad</h3>
+                <p id="dificultad" class="mt-2 text-slate-200">-</p>
+            </div>
         </div>
 
-        <div class="casos-prueba">
-            <strong>Casos de prueba públicos:</strong>
-            <div id="casos-prueba-lista" style="margin-top:8px; color:#666;">Cargando casos…</div>
+        <div class="rounded-2xl border border-slate-800 bg-slate-950/40 p-4">
+            <h3 class="text-xs uppercase tracking-[0.15em] text-slate-500">Restricciones</h3>
+            <pre id="restricciones" class="mt-2 text-sm text-slate-300 whitespace-pre-wrap font-mono">-</pre>
         </div>
-    </div>
 
-    <div class="panel-editor">
-        <div style="flex-shrink:0;">
-            <select id="selector-lenguaje">
+        <div class="grid grid-cols-1 gap-4">
+            <div class="rounded-2xl border border-slate-800 bg-slate-950/40 p-4">
+                <h3 class="text-xs uppercase tracking-[0.15em] text-slate-500">Ejemplo Entrada</h3>
+                <pre id="ejemplo_entrada" class="mt-2 text-sm text-slate-300 whitespace-pre-wrap font-mono">-</pre>
+            </div>
+            <div class="rounded-2xl border border-slate-800 bg-slate-950/40 p-4">
+                <h3 class="text-xs uppercase tracking-[0.15em] text-slate-500">Ejemplo Salida</h3>
+                <pre id="ejemplo_salida" class="mt-2 text-sm text-slate-300 whitespace-pre-wrap font-mono">-</pre>
+            </div>
+        </div>
+
+        <div class="pt-4 border-t border-slate-800">
+            <h3 class="text-sm uppercase tracking-[0.15em] text-slate-500 mb-3">Casos públicos</h3>
+            <div id="casos-prueba-lista" class="space-y-3 text-slate-400">Cargando casos...</div>
+        </div>
+    </aside>
+
+    <section class="md:col-span-7 flex flex-col gap-4 min-h-[78vh]">
+        <div class="bg-slate-900/60 backdrop-blur-xl border border-slate-800/50 rounded-3xl p-4 sm:p-5 flex items-center justify-between">
+            <div>
+                <h2 class="text-white font-semibold">Editor</h2>
+                <p class="text-sm text-slate-400">Prueba tu solución antes de enviarla.</p>
+            </div>
+            <select id="selector-lenguaje" class="rounded-xl border border-slate-700 bg-slate-900/50 px-4 py-2 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 <option value="python">Python</option>
                 <option value="java">Java</option>
                 <option value="cpp">C++</option>
             </select>
-            <button onclick="probar()" id="btn-probar">🧪 Probar previo a envío</button>
-            <button onclick="ejecutar()" id="btn-ejecutar">▶ Guardar envío</button>
         </div>
 
-        <div id="estado-ejecucion"></div>
+        <div class="flex-1 bg-slate-900/60 backdrop-blur-xl border border-slate-800/50 rounded-3xl p-4 sm:p-5 flex flex-col gap-4">
+            <textarea id="editor" class="flex-1 min-h-[280px] w-full rounded-2xl border border-slate-800 bg-slate-950/70 p-4 font-mono text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Escribe tu solución aquí..."></textarea>
 
-        <textarea id="editor" placeholder="Escribe tu solución aquí..."></textarea>
+            <div id="estado-ejecucion" class="min-h-6 text-sm font-semibold text-slate-400"></div>
 
-        <div class="resultado-wrapper">
-            <strong>Resultado:</strong>
-            <div id="resultado">Ejecuta tu código para ver el resultado.</div>
+            <div class="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
+                <h3 class="text-sm uppercase tracking-[0.15em] text-slate-500 mb-3">Resultado</h3>
+                <div id="resultado" class="text-sm text-slate-300 whitespace-pre-wrap">Ejecuta tu código para ver el resultado.</div>
+            </div>
+
+            <div class="flex flex-wrap gap-3 justify-end">
+                <button onclick="probar()" id="btn-probar" class="border border-slate-700 bg-slate-900/50 text-slate-300 hover:bg-slate-800 px-6 py-3 rounded-xl transition-all duration-300 transform hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(99,102,241,0.3)]">Probar previo a envío</button>
+                <button onclick="ejecutar()" id="btn-ejecutar" class="bg-gradient-to-r from-indigo-500 to-cyan-500 text-white font-medium px-6 py-3 rounded-xl transition-all duration-300 transform hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(99,102,241,0.3)]">Guardar envío</button>
+                <button onclick="enviarIntento()" id="btn-enviar" style="display:none" class="bg-gradient-to-r from-emerald-500 to-cyan-500 text-white font-medium px-6 py-3 rounded-xl transition-all duration-300 transform hover:-translate-y-1">Enviar intento</button>
+            </div>
         </div>
-    </div>
-
-</div>
+    </section>
+</section>
 
 <script>
-    //backend inyecta el ID del problema cuando renderiza esta plantilla.
-    // eslint-disable-next-line
     const PROBLEMA_ID = {{ problema_id | tojson }};
 
     let codigoBasePorLenguaje = {};
     let codigoBaseActual = null;
 
-    //cuando termina de cargar la página, pedimos los datos del problema y los casos de prueba
     window.addEventListener('DOMContentLoaded', () => {
         cargarProblema();
         cargarCasosPrueba();
@@ -169,6 +94,22 @@
             aplicarCodigoBase(selector.value);
         });
     });
+
+    function setStatus(type, text) {
+        const estadoDiv = document.getElementById('estado-ejecucion');
+        estadoDiv.textContent = text;
+        estadoDiv.className = 'min-h-6 text-sm font-semibold ' + (type || 'text-slate-400');
+    }
+
+    function setResult(type, text, isHtml = false) {
+        const resultadoDiv = document.getElementById('resultado');
+        resultadoDiv.className = 'text-sm whitespace-pre-wrap ' + (type || 'text-slate-300');
+        if (isHtml) {
+            resultadoDiv.innerHTML = text;
+        } else {
+            resultadoDiv.textContent = text;
+        }
+    }
 
     function aplicarCodigoBase(lenguaje) {
         const editor = document.getElementById('editor');
@@ -184,30 +125,27 @@
 
     async function cargarProblema() {
         try {
-            // Llamada a la API para obtener el enunciado completo del problema.
             const res = await fetch('/api/problems/' + encodeURIComponent(PROBLEMA_ID));
             if (!res.ok) throw new Error('No se pudo obtener el problema');
             const p = await res.json();
 
-            // Con los datos de la API llenamos el panel izquierdo de la vista.
             document.getElementById('titulo-problema').textContent = p.titulo || 'Sin título';
             document.getElementById('descripcion').innerHTML = p.descripcion || '';
-            document.getElementById('categoria').textContent = p.categoria || '—';
-            document.getElementById('dificultad').textContent = (p.dificultad || '—');
-            document.getElementById('restricciones').textContent = p.restricciones || '—';
-            document.getElementById('ejemplo_entrada').textContent = p.ejemplo_entrada || '—';
-            document.getElementById('ejemplo_salida').textContent = p.ejemplo_salida || '—';
+            document.getElementById('categoria').textContent = p.categoria || '-';
+            document.getElementById('dificultad').textContent = p.dificultad || '-';
+            document.getElementById('restricciones').textContent = p.restricciones || '-';
+            document.getElementById('ejemplo_entrada').textContent = p.ejemplo_entrada || '-';
+            document.getElementById('ejemplo_salida').textContent = p.ejemplo_salida || '-';
+            document.getElementById('meta').textContent = 'ID: ' + (p.id || '-') + ' · Tiempo límite: ' + (p.limite_tiempo_ms || '-') + 'ms';
 
             codigoBasePorLenguaje = {
                 python: p.codigo_base_python || '',
                 java: p.codigo_base_java || '',
-                cpp: p.codigo_base_cpp || '',
+                cpp: p.codigo_base_cpp || ''
             };
 
             aplicarCodigoBase(document.getElementById('selector-lenguaje').value);
-
         } catch (err) {
-            // Si falla la API, mostramos un estado de error legible en vez de dejar la vista vacía.
             document.getElementById('titulo-problema').textContent = 'No se encontró el problema';
             document.getElementById('descripcion').textContent = '';
         }
@@ -216,27 +154,24 @@
     async function cargarCasosPrueba() {
         const contenedor = document.getElementById('casos-prueba-lista');
         try {
-            // Esta ruta entrega los casos públicos que se usan para validar la solución.
             const res = await fetch('/api/problems/' + encodeURIComponent(PROBLEMA_ID) + '/test-cases');
             if (!res.ok) throw new Error('No se pudieron cargar los casos');
             const data = await res.json();
             const casos = data.casos || [];
 
-            // Si no hay casos, informamos explícitamente al usuario.
             if (!casos.length) {
                 contenedor.textContent = 'No hay casos de prueba públicos para este problema.';
                 return;
             }
 
-            // Renderizamos cada caso en HTML para que el usuario pueda revisar entradas y salidas esperadas.
             contenedor.innerHTML = casos.map((caso) => `
-                <div class="caso-item">
-                    <strong>${caso.descripcion || ('Caso ' + caso.orden)}</strong>
-                    <div><b>Entrada:</b></div>
-                    <pre>${caso.entrada || '—'}</pre>
-                    <div><b>Salida esperada:</b></div>
-                    <pre>${caso.salida_esperada || '—'}</pre>
-                </div>
+                <article class="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+                    <h4 class="font-semibold text-slate-200">${caso.descripcion || ('Caso ' + caso.orden)}</h4>
+                    <p class="mt-2 text-xs uppercase tracking-[0.12em] text-slate-500">Entrada</p>
+                    <pre class="mt-1 text-sm text-slate-300 font-mono whitespace-pre-wrap">${caso.entrada || '-'}</pre>
+                    <p class="mt-3 text-xs uppercase tracking-[0.12em] text-slate-500">Salida esperada</p>
+                    <pre class="mt-1 text-sm text-slate-300 font-mono whitespace-pre-wrap">${caso.salida_esperada || '-'}</pre>
+                </article>
             `).join('');
         } catch (err) {
             contenedor.textContent = 'No se pudieron cargar los casos de prueba.';
@@ -244,166 +179,114 @@
     }
 
     async function probar() {
-        const codigo = document.getElementById("editor").value;
-        const lenguaje = document.getElementById("selector-lenguaje").value;
-        const btn = document.getElementById("btn-probar");
-        const resultadoDiv = document.getElementById("resultado");
-        const estadoDiv = document.getElementById("estado-ejecucion");
+        const codigo = document.getElementById('editor').value;
+        const lenguaje = document.getElementById('selector-lenguaje').value;
+        const btn = document.getElementById('btn-probar');
 
         if (!codigo.trim()) {
-            resultadoDiv.className = "advertencia";
-            resultadoDiv.textContent = "⚠ Escribe algún código antes de probar.";
+            setResult('text-amber-400', 'Escribe algún código antes de probar.');
             return;
         }
 
         btn.disabled = true;
-        btn.textContent = "⏳ Probando...";
-        estadoDiv.className = "ejecutando";
-        estadoDiv.textContent = "Ejecutando contra casos de prueba...";
-        resultadoDiv.className = "";
-        resultadoDiv.textContent = "";
+        btn.textContent = 'Probando...';
+        setStatus('text-amber-400', 'Ejecutando contra casos de prueba...');
+        setResult('text-slate-300', '');
 
         try {
-            const response = await fetch("/api/submissions/preview", {
-                method: "POST",
-                credentials: "include",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    problema_id: PROBLEMA_ID,
-                    language: lenguaje,
-                    source_code: codigo
-                })
+            const response = await fetch('/api/submissions/preview', {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ problema_id: PROBLEMA_ID, language: lenguaje, source_code: codigo })
             });
 
-            const resultado = await response.json();
-                if (!response.ok) {
-                    estadoDiv.className = "error";
-                    estadoDiv.textContent = resultado.error || "No se pudo probar.";
-                    return;
-                }
-
-            estadoDiv.className = "correcto";
-            estadoDiv.textContent = `Pruebas completadas: ${resultado.casos_pasados}/${resultado.total_casos} aprobados.`;
-            mostrarResultado(resultado);
-
-        } 
-        
-        catch (e) {
-            estadoDiv.className = "error";
-            estadoDiv.textContent = "❌ No se pudo conectar con el servidor.";
-        } 
-
-        finally {
-            btn.disabled = false;
-            btn.textContent = "🧪 Probar previo a envío";
-        }
-}
-
-    async function ejecutar() {
-        // Tomamos el código escrito por el usuario y el lenguaje seleccionado.
-        const codigo = document.getElementById("editor").value;
-        const lenguaje = document.getElementById("selector-lenguaje").value;
-        const btn = document.getElementById("btn-ejecutar");
-        const resultadoDiv = document.getElementById("resultado");
-        const estadoDiv = document.getElementById("estado-ejecucion");
-
-        // Evitamos hacer una llamada vacía al backend.
-        if (!codigo.trim()) {
-            resultadoDiv.className = "advertencia";
-            resultadoDiv.textContent = "⚠ Escribe algún código antes de ejecutar.";
-            return;
-        }
-
-        // Deshabilitamos el botón mientras corre la evaluación para evitar múltiples envíos.
-        btn.disabled = true;
-        btn.textContent = "⏳ Evaluando...";
-        estadoDiv.className = "ejecutando";
-        estadoDiv.textContent = "Ejecutando contra casos de prueba...";
-        resultadoDiv.className = "";
-        resultadoDiv.textContent = "";
-
-        try {
-            // Esta es la llamada clave: enviamos código + lenguaje al endpoint de pruebas.
-            const response = await fetch("/api/submissions/test-run", {
-                method: "POST",
-                credentials: "include",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    problema_id: PROBLEMA_ID,
-                    language: lenguaje,
-                    source_code: codigo
-                })
-            });
-
-            // Si el backend detecta que el usuario ya tiene una ejecución en curso,
-            // respondemos con un mensaje específico para no confundirlo con un error genérico.
-            if (response.status === 409) {
-                const conflicto = await response.json();
-                estadoDiv.className = "advertencia";
-                estadoDiv.textContent = "Ya hay una ejecución en curso para este usuario.";
-                resultadoDiv.className = "advertencia";
-                resultadoDiv.textContent = conflicto.error || "Ya hay una ejecución en curso.";
-                return;
-            }
-
-            // Convertimos la respuesta JSON en una estructura que luego renderiza mostrarResultado().
             const resultado = await response.json();
             if (!response.ok) {
-                estadoDiv.className = "error";
-                estadoDiv.textContent = resultado.error || "No se pudo evaluar el código.";
-                resultadoDiv.className = "error";
-                resultadoDiv.textContent = resultado.error || "No se pudo evaluar el código.";
+                setStatus('text-red-400', resultado.error || 'No se pudo probar.');
                 return;
             }
 
-            // Si todo salió bien, resumimos cuántas pruebas pasaron.
-            estadoDiv.className = "correcto";
-            estadoDiv.textContent = `Pruebas completadas: ${resultado.casos_pasados}/${resultado.total_casos} aprobados.`;
+            setStatus('text-emerald-400', `Pruebas completadas: ${resultado.casos_pasados}/${resultado.total_casos} aprobados.`);
+            mostrarResultado(resultado);
+        } catch (e) {
+            setStatus('text-red-400', 'No se pudo conectar con el servidor.');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Probar previo a envío';
+        }
+    }
+
+    async function ejecutar() {
+        const codigo = document.getElementById('editor').value;
+        const lenguaje = document.getElementById('selector-lenguaje').value;
+        const btn = document.getElementById('btn-ejecutar');
+
+        if (!codigo.trim()) {
+            setResult('text-amber-400', 'Escribe algún código antes de ejecutar.');
+            return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = 'Evaluando...';
+        setStatus('text-amber-400', 'Ejecutando contra casos de prueba...');
+        setResult('text-slate-300', '');
+
+        try {
+            const response = await fetch('/api/submissions/test-run', {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ problema_id: PROBLEMA_ID, language: lenguaje, source_code: codigo })
+            });
+
+            if (response.status === 409) {
+                const conflicto = await response.json();
+                setStatus('text-amber-400', 'Ya hay una ejecución en curso para este usuario.');
+                setResult('text-amber-400', conflicto.error || 'Ya hay una ejecución en curso.');
+                return;
+            }
+
+            const resultado = await response.json();
+            if (!response.ok) {
+                setStatus('text-red-400', resultado.error || 'No se pudo evaluar el código.');
+                setResult('text-red-400', resultado.error || 'No se pudo evaluar el código.');
+                return;
+            }
+
+            setStatus('text-emerald-400', `Pruebas completadas: ${resultado.casos_pasados}/${resultado.total_casos} aprobados.`);
             mostrarResultado(resultado);
 
-            // Solo habilitamos el envío final si la solución aprobó todos los casos.
             const btnEnviar = document.getElementById('btn-enviar');
             if (resultado.casos_pasados === resultado.total_casos) {
                 btnEnviar.style.display = 'inline-block';
                 btnEnviar.disabled = false;
-                // Guardamos el resultado para reutilizarlo al confirmar el envío.
                 btnEnviar.dataset.payload = JSON.stringify(resultado);
             } else {
                 btnEnviar.style.display = 'none';
             }
-
         } catch (e) {
-            // Si falla la red o el backend, mostramos un error de conexión claro.
-            estadoDiv.className = "error";
-            estadoDiv.textContent = "No se pudo completar la evaluación.";
-            resultadoDiv.className = "error";
-            resultadoDiv.textContent = "❌ No se pudo conectar con el servidor.";
+            setStatus('text-red-400', 'No se pudo completar la evaluación.');
+            setResult('text-red-400', 'No se pudo conectar con el servidor.');
         } finally {
-            // Rehabilitamos el botón siempre, haya funcionado o no.
             btn.disabled = false;
-            btn.textContent = "▶ Ejecutar";
+            btn.textContent = 'Guardar envío';
         }
     }
 
     async function enviarIntento() {
-        // Reutilizamos el resultado previo de la prueba para enviar solo si fue aprobado.
         const btn = document.getElementById('btn-enviar');
-        const estadoDiv = document.getElementById('estado-ejecucion');
-        const resultadoDiv = document.getElementById('resultado');
-
         const payload = btn.dataset.payload ? JSON.parse(btn.dataset.payload) : null;
+
         if (!payload) {
-            estadoDiv.className = 'error';
-            estadoDiv.textContent = 'No hay resultados para enviar.';
+            setStatus('text-red-400', 'No hay resultados para enviar.');
             return;
         }
 
-        // Bloqueamos el botón mientras se persiste el intento.
         btn.disabled = true;
-        btn.textContent = '📤 Enviando...';
+        btn.textContent = 'Enviando...';
 
         try {
-            // Este endpoint guarda el intento ya validado y lo asocia al usuario autenticado.
             const response = await fetch('/api/submissions/submit', {
                 method: 'POST',
                 credentials: 'include',
@@ -416,76 +299,78 @@
                 })
             });
 
-            // El backend confirma si el guardado fue correcto o devuelve un mensaje de error.
             const data = await response.json();
             if (!response.ok) {
-                estadoDiv.className = 'error';
-                estadoDiv.textContent = data.error || 'No se pudo enviar el intento.';
-                resultadoDiv.className = 'error';
-                resultadoDiv.textContent = data.error || 'No se pudo enviar el intento.';
+                setStatus('text-red-400', data.error || 'No se pudo enviar el intento.');
+                setResult('text-red-400', data.error || 'No se pudo enviar el intento.');
                 return;
             }
 
-            // Si el envío se guardó, ocultamos el botón para evitar duplicados.
-            estadoDiv.className = 'correcto';
-            estadoDiv.textContent = 'Intento enviado correctamente.';
-            resultadoDiv.className = 'correcto';
-            resultadoDiv.textContent = '✅ Envío guardado: ' + (data.submission_id || 'ok');
+            setStatus('text-emerald-400', 'Intento enviado correctamente.');
+            setResult('text-emerald-400', 'Envío guardado: ' + (data.submission_id || 'ok'));
             btn.style.display = 'none';
-
         } catch (err) {
-            // Error de red o servidor al intentar persistir el envío.
-            estadoDiv.className = 'error';
-            estadoDiv.textContent = 'Error enviando el intento.';
-            resultadoDiv.className = 'error';
-            resultadoDiv.textContent = 'No se pudo conectar con el servidor.';
+            setStatus('text-red-400', 'Error enviando el intento.');
+            setResult('text-red-400', 'No se pudo conectar con el servidor.');
         } finally {
-            // Dejamos el botón listo por si el usuario vuelve a intentar.
             btn.disabled = false;
-            btn.textContent = '📤 Enviar intento';
+            btn.textContent = 'Enviar intento';
         }
     }
 
     function mostrarResultado(resultado) {
-        // Esta función traduce la respuesta del backend a un mensaje legible en pantalla.
-        const div = document.getElementById("resultado");
-
-        // Ordenamos los casos especiales primero: timeout, compilación, ejecución o error del sistema.
         if (resultado.timeout || resultado.supero_tiempo_limite) {
-            div.className = "advertencia";
-            div.textContent = "⏱ Tiempo límite excedido. Revisa si tienes un bucle infinito.";
-        } else if (resultado.tipo_error === "compilacion") {
-            div.className = "error";
-            div.textContent = "🔴 Error de compilación:\n\n" + (resultado.stderr || resultado.error || '');
-        } else if (resultado.tipo_error === "ejecucion") {
-            div.className = "error";
-            div.textContent = "🟠 Error de ejecución:\n\n" + (resultado.stderr || resultado.error || '');
-        } else if (resultado.tipo_error === "sistema") {
-            div.className = "error";
-            div.textContent = "⚙️ " + (resultado.stderr || resultado.error || '');
-        } else if (Array.isArray(resultado.resultado)) {
-            // Si el backend devuelve un desglose por caso, lo mostramos caso por caso.
-            let html = "";
-            for (const caso of resultado.resultado) {
-                const color = caso.estado === "Aprobado" ? "green" : "red";
-                const icono = caso.estado === "Aprobado" ? "✅" : "❌";
-                const etiquetaError = caso.tipo_error ? ", tipo de error: " + caso.tipo_error : "";
-                html += `
-                <div style="border:1px solid ${color}; border-radius:6px; padding:8px; margin:6px 0; color:${color}">
-                    ${icono} <strong>${caso.descripcion || "Caso " + caso.caso_id}</strong>: ${caso.estado}${etiquetaError}
-                    <br><small style="color:#555">Esperado: <code>${caso.esperado}</code> — Obtenido: <code>${caso.output}</code></small>
-                </div>`;
-            }
-            div.className = "";
-            div.innerHTML = html;
-        } else {
-            // Si no hay desglose, asumimos salida correcta simple y mostramos stdout/output.
-            div.className = "correcto";
-            div.textContent = "✅ Correcto:\n\n" + (resultado.stdout || resultado.output || "(sin salida)");
+            setResult('text-amber-400', 'Tiempo límite excedido. Revisa si tienes un bucle infinito.');
+            return;
         }
+
+        if (resultado.tipo_error === 'compilacion') {
+            setResult('text-red-400', 'Error de compilación:\n\n' + (resultado.stderr || resultado.error || ''));
+            return;
+        }
+
+        if (resultado.tipo_error === 'ejecucion') {
+            setResult('text-red-400', 'Error de ejecución:\n\n' + (resultado.stderr || resultado.error || ''));
+            return;
+        }
+
+        if (resultado.tipo_error === 'sistema') {
+            setResult('text-red-400', resultado.stderr || resultado.error || 'Error de sistema');
+            return;
+        }
+
+        if (Array.isArray(resultado.resultado)) {
+            let html = '';
+            for (const caso of resultado.resultado) {
+                const ok = caso.estado === 'Aprobado';
+                const cardClass = ok
+                    ? 'border-emerald-700/60 bg-emerald-950/20'
+                    : 'border-red-700/60 bg-red-950/20';
+                const titleClass = ok ? 'text-emerald-400' : 'text-red-400';
+                const icon = ok ? 'Aprobado' : 'Fallo';
+                const etiquetaError = caso.tipo_error ? ' · ' + caso.tipo_error : '';
+
+                html += `
+                    <article class="mb-3 rounded-xl border ${cardClass} p-3">
+                        <p class="font-semibold ${titleClass}">${icon}: ${caso.descripcion || ('Caso ' + caso.caso_id)}${etiquetaError}</p>
+                        <p class="mt-1 text-xs text-slate-300">Esperado: <code>${escapeHtml(caso.esperado)}</code></p>
+                        <p class="text-xs text-slate-300">Obtenido: <code>${escapeHtml(caso.output)}</code></p>
+                    </article>`;
+            }
+            setResult('text-slate-200', html, true);
+            return;
+        }
+
+        setResult('text-emerald-400', 'Correcto:\n\n' + (resultado.stdout || resultado.output || '(sin salida)'));
     }
 
+    function escapeHtml(str) {
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
 </script>
-
-</body>
-</html>
+{% endblock %}

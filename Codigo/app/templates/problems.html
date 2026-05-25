@@ -1,333 +1,170 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Problemas — LeetCode Clone</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+{% extends "base.html" %}
 
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #0f1117;
-      color: #e5e7eb;
-      min-height: 100vh;
-    }
+{% block title %}Problemas - CodeChallenge{% endblock %}
 
-    header {
-      background: #1a1d27;
-      border-bottom: 1px solid #2d2f3e;
-      padding: 0 2rem;
-      display: flex;
-      align-items: center;
-      height: 56px;
-      gap: 2rem;
-    }
-
-    header .logo {
-      font-size: 1.2rem;
-      font-weight: 700;
-      color: #f59e0b;
-      text-decoration: none;
-    }
-
-    nav a {
-      color: #9ca3af;
-      text-decoration: none;
-      font-size: 0.9rem;
-      padding: 0.25rem 0.5rem;
-      border-radius: 4px;
-      transition: color 0.2s;
-    }
-
-    nav a:hover, nav a.active { color: #e5e7eb; }
-
-    .container {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 2rem 1.5rem;
-    }
-
-    h1 {
-      font-size: 1.6rem;
-      font-weight: 600;
-      margin-bottom: 1.5rem;
-    }
-
-    .toolbar {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-      flex-wrap: wrap;
-    }
-
-    .toolbar label {
-      font-size: 0.85rem;
-      color: #9ca3af;
-    }
-
-    select {
-      background: #1a1d27;
-      color: #e5e7eb;
-      border: 1px solid #2d2f3e;
-      border-radius: 6px;
-      padding: 0.4rem 0.8rem;
-      font-size: 0.9rem;
-      cursor: pointer;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-
-    select:focus { border-color: #f59e0b; }
-
-    .stats {
-      font-size: 0.85rem;
-      color: #6b7280;
-      margin-left: auto;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: #1a1d27;
-      border-radius: 10px;
-      overflow: hidden;
-    }
-
-    thead { background: #22263a; }
-
-    th {
-      text-align: left;
-      padding: 0.85rem 1.2rem;
-      font-size: 0.8rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: #6b7280;
-      border-bottom: 1px solid #2d2f3e;
-    }
-
-    td {
-      padding: 1rem 1.2rem;
-      font-size: 0.92rem;
-      border-bottom: 1px solid #1f2232;
-    }
-
-    tr:last-child td { border-bottom: none; }
-    tr:hover td { background: #1f2232; }
-
-    /* RF-02.2: fila separadora de categoría */
-    .categoria-header td {
-      background: #12151f;
-      color: #6b7280;
-      font-size: 0.75rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      padding: 0.45rem 1.2rem;
-      border-bottom: 1px solid #2d2f3e;
-    }
-    .categoria-header:hover td { background: #12151f; }
-
-    .badge {
-      display: inline-block;
-      padding: 0.2rem 0.7rem;
-      border-radius: 999px;
-      font-size: 0.78rem;
-      font-weight: 600;
-    }
-
-    .badge-facil    { background: #052e16; color: #4ade80; }
-    .badge-medio    { background: #1c1917; color: #fbbf24; }
-    .badge-dificil  { background: #1c0a0a; color: #f87171; }
-
-    /* RF-02.10: badge de estado */
-    .badge-disponible   { background: #052e16; color: #4ade80; }
-    .badge-nodisponible { background: #1f2232; color: #6b7280; }
-
-    .problem-link {
-      color: #e5e7eb;
-      text-decoration: none;
-      font-weight: 500;
-    }
-    .problem-link:hover { color: #f59e0b; }
-
-    .categoria-tag {
-      display: inline-block;
-      background: #1e293b;
-      color: #94a3b8;
-      padding: 0.15rem 0.6rem;
-      border-radius: 4px;
-      font-size: 0.78rem;
-    }
-
-    #loading, #empty-msg {
-      text-align: center;
-      padding: 3rem;
-      color: #6b7280;
-      font-size: 0.95rem;
-    }
-
-    #error-msg {
-      display: none;
-      background: #1c0a0a;
-      border: 1px solid #7f1d1d;
-      color: #f87171;
-      padding: 1rem 1.2rem;
-      border-radius: 8px;
-      margin-bottom: 1rem;
-      font-size: 0.9rem;
-    }
-  </style>
-</head>
-<body>
-
-  <header>
-    <a class="logo" href="#">LeetCode Clone</a>
-    <nav>
-      <a href="#" class="active">Problemas</a>
-    </nav>
-  </header>
-
-  <div class="container">
-    <h1>Problemas</h1>
-
-    <div id="error-msg"></div>
-
-    <div class="toolbar">
-      <label for="filtro-dificultad">Dificultad:</label>
-      <!-- RF-02.6: el select recupera el filtro guardado en sessionStorage -->
-      <select id="filtro-dificultad" onchange="guardarYCargar()">
-        <option value="">Todos</option>
-        <option value="facil">Fácil</option>
-        <option value="medio">Medio</option>
-        <option value="dificil">Difícil</option>
-      </select>
-
-      <span class="stats" id="contador"></span>
-    </div>
-
-    <table id="tabla-problemas">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Título</th>
-          <th>Categoría</th>
-          <th>Dificultad</th>
-          <th>Estado</th>
-        </tr>
-      </thead>
-      <tbody id="cuerpo-tabla">
-        <tr>
-          <td colspan="5" id="loading">Cargando problemas…</td>
-        </tr>
-      </tbody>
-    </table>
+{% block content %}
+<section class="max-w-7xl mx-auto space-y-12">
+  <div class="space-y-4">
+    <p class="text-xs uppercase tracking-[0.2em] text-slate-500">Explora</p>
+    <h1 class="font-extrabold tracking-tight text-white text-4xl md:text-6xl">
+      Catálogo de
+      <span class="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-sky-400 to-emerald-400">problemas</span>
+    </h1>
+    <p class="max-w-2xl text-base text-slate-400 leading-relaxed">
+      Filtra por dificultad y resuelve retos en una interfaz limpia, rápida y consistente.
+    </p>
   </div>
 
-  <script>
-    const DIFICULTAD_LABELS = { facil: 'Fácil', medio: 'Medio', dificil: 'Difícil' };
-    const ORDEN_DIFICULTAD  = { facil: 0, medio: 1, dificil: 2 };
+  <div id="error-msg" class="hidden rounded-2xl border border-red-800/60 bg-red-950/30 text-red-300 px-5 py-4"></div>
 
-    // RF-02.6: restaurar filtro guardado al cargar la página
-    window.addEventListener('DOMContentLoaded', () => {
-      const filtroGuardado = sessionStorage.getItem('filtro-dificultad') || '';
-      document.getElementById('filtro-dificultad').value = filtroGuardado;
-      cargarProblemas(filtroGuardado);
-    });
+  <div class="bg-slate-900/60 backdrop-blur-xl border border-slate-800/50 rounded-3xl p-5 sm:p-8">
+    <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-6">
+      <div class="flex items-end gap-3">
+        <div>
+          <label for="filtro-dificultad" class="block text-sm text-slate-300 mb-2">Dificultad</label>
+          <select id="filtro-dificultad" class="rounded-xl border border-slate-700 bg-slate-900/50 px-4 py-2 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500" onchange="guardarYCargar()">
+            <option value="">Todos</option>
+            <option value="facil">Fácil</option>
+            <option value="medio">Medio</option>
+            <option value="dificil">Difícil</option>
+          </select>
+        </div>
+      </div>
+      <span id="contador" class="text-sm text-slate-500"></span>
+    </div>
 
-    // RF-02.6: guardar filtro y recargar lista
-    function guardarYCargar() {
-      const dificultad = document.getElementById('filtro-dificultad').value;
-      sessionStorage.setItem('filtro-dificultad', dificultad);
-      cargarProblemas(dificultad);
-    }
+    <div class="overflow-x-auto">
+      <table id="tabla-problemas" class="min-w-full text-left">
+        <thead>
+          <tr class="border-b border-slate-800/80">
+            <th class="px-4 py-3 text-xs uppercase tracking-widest text-slate-500">#</th>
+            <th class="px-4 py-3 text-xs uppercase tracking-widest text-slate-500">Título</th>
+            <th class="px-4 py-3 text-xs uppercase tracking-widest text-slate-500">Categoría</th>
+            <th class="px-4 py-3 text-xs uppercase tracking-widest text-slate-500">Dificultad</th>
+            <th class="px-4 py-3 text-xs uppercase tracking-widest text-slate-500">Estado</th>
+          </tr>
+        </thead>
+        <tbody id="cuerpo-tabla">
+          <tr>
+            <td colspan="5" id="loading" class="px-4 py-12 text-center text-slate-500">Cargando problemas...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
 
-    // RF-02.7: actualización dinámica sin recargar la página
-    async function cargarProblemas(dificultad) {
-      const tbody    = document.getElementById('cuerpo-tabla');
-      const errorDiv = document.getElementById('error-msg');
-      const contador = document.getElementById('contador');
+<script>
+  const DIFICULTAD_LABELS = { facil: 'Fácil', medio: 'Medio', dificil: 'Difícil' };
+  const ORDEN_DIFICULTAD = { facil: 0, medio: 1, dificil: 2 };
 
-      tbody.innerHTML = '<tr><td colspan="5" id="loading">Cargando…</td></tr>';
-      errorDiv.style.display = 'none';
+  window.addEventListener('DOMContentLoaded', () => {
+    const filtroGuardado = sessionStorage.getItem('filtro-dificultad') || '';
+    document.getElementById('filtro-dificultad').value = filtroGuardado;
+    cargarProblemas(filtroGuardado);
+  });
 
-      let url = '/api/problems';
-      if (dificultad) url += '?difficulty=' + dificultad;
+  function guardarYCargar() {
+    const dificultad = document.getElementById('filtro-dificultad').value;
+    sessionStorage.setItem('filtro-dificultad', dificultad);
+    cargarProblemas(dificultad);
+  }
 
-      try {
-        const res = await fetch(url);
-        if (!res.ok) throw new Error('Error del servidor: ' + res.status);
-        const problemas = await res.json();
+  function badgeDificultadClass(dificultad) {
+    if (dificultad === 'facil') return 'bg-green-500/10 text-green-400 border border-green-600/30';
+    if (dificultad === 'medio') return 'bg-amber-500/10 text-amber-400 border border-amber-600/30';
+    if (dificultad === 'dificil') return 'bg-red-500/10 text-red-400 border border-red-600/30';
+    return 'bg-slate-700/20 text-slate-300 border border-slate-600/30';
+  }
 
-        // RF-02.10: solo mostrar disponibles (esta_activo=true)
-        const disponibles = problemas.filter(p => p.esta_activo !== false);
+  function badgeEstadoClass(activo) {
+    return activo
+      ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-600/30'
+      : 'bg-slate-700/30 text-slate-400 border border-slate-600/30';
+  }
 
-        if (disponibles.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="5" id="empty-msg">No hay problemas con ese filtro.</td></tr>';
-          contador.textContent = '';
-          return;
-        }
+  async function cargarProblemas(dificultad) {
+    const tbody = document.getElementById('cuerpo-tabla');
+    const errorDiv = document.getElementById('error-msg');
+    const contador = document.getElementById('contador');
 
-        contador.textContent = disponibles.length + ' problema(s)';
+    tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-12 text-center text-slate-500">Cargando...</td></tr>';
+    errorDiv.classList.add('hidden');
 
-        // RF-02.2: agrupar por categoría, luego ordenar por dificultad dentro de cada grupo
-        const porCategoria = {};
-        disponibles.forEach(p => {
-          const cat = p.categoria || 'Sin categoría';
-          if (!porCategoria[cat]) porCategoria[cat] = [];
-          porCategoria[cat].push(p);
-        });
+    let url = '/api/problems';
+    if (dificultad) url += '?difficulty=' + encodeURIComponent(dificultad);
 
-        Object.values(porCategoria).forEach(grupo => {
-          grupo.sort((a, b) => (ORDEN_DIFICULTAD[a.dificultad] ?? 99) - (ORDEN_DIFICULTAD[b.dificultad] ?? 99));
-        });
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('Error del servidor: ' + res.status);
+      const problemas = await res.json();
 
-        let filas = '';
-        let contador_global = 1;
-
-        Object.entries(porCategoria).forEach(([categoria, grupo]) => {
-          // fila de encabezado de categoría
-          filas += `
-            <tr class="categoria-header">
-              <td colspan="5">${escapeHtml(categoria)}</td>
-            </tr>`;
-
-          grupo.forEach(p => {
-            const badgeClass   = 'badge-' + (p.dificultad || '');
-            const label        = DIFICULTAD_LABELS[p.dificultad] || p.dificultad || '—';
-            const estadoClass  = p.esta_activo ? 'badge-disponible' : 'badge-nodisponible';
-            const estadoLabel  = p.esta_activo ? 'Disponible' : 'No disponible';
-
-            filas += `
-              <tr>
-                <td style="color:#6b7280">${contador_global++}</td>
-                <td><a class="problem-link" href="/problems/${encodeURIComponent(p.id)}/ui">${escapeHtml(p.titulo)}</a></td>
-                <td><span class="categoria-tag">${escapeHtml(p.categoria || '—')}</span></td>
-                <td><span class="badge ${badgeClass}">${label}</span></td>
-                <td><span class="badge ${estadoClass}">${estadoLabel}</span></td>
-              </tr>`;
-          });
-        });
-
-        tbody.innerHTML = filas;
-
-      } catch (err) {
-        errorDiv.textContent = 'No se pudo cargar la lista de problemas. Verifica que el servidor esté corriendo. (' + err.message + ')';
-        errorDiv.style.display = 'block';
-        tbody.innerHTML = '';
+      const disponibles = problemas.filter((p) => p.esta_activo !== false);
+      if (disponibles.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-12 text-center text-slate-500">No hay problemas con ese filtro.</td></tr>';
         contador.textContent = '';
+        return;
       }
-    }
 
-    function escapeHtml(str) {
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
-    }
-  </script>
+      contador.textContent = disponibles.length + ' problema(s)';
 
-</body>
-</html>
+      const porCategoria = {};
+      disponibles.forEach((p) => {
+        const cat = p.categoria || 'Sin categoría';
+        if (!porCategoria[cat]) porCategoria[cat] = [];
+        porCategoria[cat].push(p);
+      });
+
+      Object.values(porCategoria).forEach((grupo) => {
+        grupo.sort((a, b) => (ORDEN_DIFICULTAD[a.dificultad] ?? 99) - (ORDEN_DIFICULTAD[b.dificultad] ?? 99));
+      });
+
+      let filas = '';
+      let contadorGlobal = 1;
+
+      Object.entries(porCategoria).forEach(([categoria, grupo]) => {
+        filas += `
+          <tr>
+            <td colspan="5" class="px-4 py-2 text-[11px] uppercase tracking-[0.15em] text-slate-500 bg-slate-950/50 border-y border-slate-800/80">${escapeHtml(categoria)}</td>
+          </tr>`;
+
+        grupo.forEach((p) => {
+          const label = DIFICULTAD_LABELS[p.dificultad] || p.dificultad || '—';
+          const estadoLabel = p.esta_activo ? 'Disponible' : 'No disponible';
+
+          filas += `
+            <tr class="border-b border-slate-800/60 hover:bg-slate-800/30 transition-colors">
+              <td class="px-4 py-4 text-slate-500">${contadorGlobal++}</td>
+              <td class="px-4 py-4">
+                <a class="text-slate-100 hover:text-indigo-300 transition-colors font-medium" href="/problems/${encodeURIComponent(p.id)}/ui">${escapeHtml(p.titulo)}</a>
+              </td>
+              <td class="px-4 py-4">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs border border-slate-700 text-slate-300 bg-slate-800/40">${escapeHtml(p.categoria || '—')}</span>
+              </td>
+              <td class="px-4 py-4">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs ${badgeDificultadClass(p.dificultad)}">${label}</span>
+              </td>
+              <td class="px-4 py-4">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs ${badgeEstadoClass(p.esta_activo)}">${estadoLabel}</span>
+              </td>
+            </tr>`;
+        });
+      });
+
+      tbody.innerHTML = filas;
+    } catch (err) {
+      errorDiv.textContent = 'No se pudo cargar la lista de problemas. (' + err.message + ')';
+      errorDiv.classList.remove('hidden');
+      tbody.innerHTML = '';
+      contador.textContent = '';
+    }
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+</script>
+{% endblock %}
