@@ -4,6 +4,7 @@ from flask import Blueprint, jsonify, request, render_template, redirect, url_fo
 from app.auth import require_auth
 from models.problema import Problema
 from models.caso_prueba import CasoPrueba
+from models.categoria import Categoria
 import uuid
 from app.extensions import db
 
@@ -46,6 +47,14 @@ def get_problems():
     problemas.sort(key=lambda p: orden.get(p.dificultad, 99))
 
     return jsonify([p.to_dict() for p in problemas])
+
+@problems_bp.route('/api/categories', methods=['GET'])
+def get_categories():
+    """Retorna todas las categorías disponibles."""
+    categorias = Categoria.query.all()
+    return jsonify({
+        "categorias": [cat.to_dict() for cat in categorias]
+    }), 200
 
 @problems_bp.route('/api/problems/<problema_id>', methods=['GET'])
 def get_problem(problema_id):
@@ -93,16 +102,33 @@ def crear_problema():
         titulo=data.get('titulo'),
         descripcion=data.get('descripcion'),
         dificultad=data.get('dificultad'),
+        categoria_id=data.get('categoria_id'),
         restricciones=data.get('restricciones'),
         ejemplo_entrada=data.get('ejemplo_entrada'),
         ejemplo_salida=data.get('ejemplo_salida'),
         limite_tiempo_ms=data.get('limite_tiempo_ms'),
         limite_memoria_mb=data.get('limite_memoria_mb'),
-        esta_activo=True,
+        esta_activo=data.get('esta_activo', True),
         creado_por=g.current_user_id
     )
 
     db.session.add(nuevo_problema)
+    db.session.flush()  # Para obtener el ID antes de hacer commit
+
+    # Crear los casos de prueba
+    casos_prueba = data.get('casos_prueba', [])
+    for caso_data in casos_prueba:
+        caso = CasoPrueba(
+            id=str(uuid.uuid4()),
+            problema_id=nuevo_problema.id,
+            descripcion=caso_data.get('descripcion'),
+            entrada=caso_data.get('entrada'),
+            salida_esperada=caso_data.get('salida_esperada'),
+            es_publico=caso_data.get('es_publico', True),
+            orden=caso_data.get('orden', 1)
+        )
+        db.session.add(caso)
+
     db.session.commit()
 
     return jsonify({

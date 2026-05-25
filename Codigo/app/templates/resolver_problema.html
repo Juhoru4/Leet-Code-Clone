@@ -153,9 +153,10 @@
 </div>
 
 <script>
-    //backend inyecta el ID del problema cuando renderiza esta plantilla.
+    // Backend inyecta el ID del problema cuando renderiza esta plantilla.
     // eslint-disable-next-line
-    const PROBLEMA_ID = {{ problema_id | tojson }};
+    // @ts-ignore
+    const PROBLEMA_ID={{problema_id|tojson}};
 
     let codigoBasePorLenguaje = {};
     let codigoBaseActual = null;
