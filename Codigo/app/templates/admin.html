@@ -417,6 +417,103 @@
             cursor: not-allowed;
         }
 
+        /* ── SUBSECCIÓN TABS ── */
+        .subsection-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 0;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: var(--muted);
+            padding: 0.75rem 1.5rem;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+        }
+
+        .tab-btn:hover { color: var(--text); }
+
+        .tab-btn.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+
+        .subsection { display: none; }
+        .subsection.active { display: block; }
+
+        /* ── PROBLEMAS TABLA ── */
+        .problemas-tabla {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--surface);
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .problemas-tabla thead { background: #22263a; }
+
+        .problemas-tabla th {
+            text-align: left;
+            padding: 0.85rem 1.2rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #6b7280;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .problemas-tabla td {
+            padding: 1rem 1.2rem;
+            font-size: 0.92rem;
+            border-bottom: 1px solid #1f2232;
+        }
+
+        .problemas-tabla tr:last-child td { border-bottom: none; }
+        .problemas-tabla tr:hover td { background: #1f2232; }
+
+        .problema-acciones {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-edit-problema {
+            background: rgba(96, 165, 250, 0.1);
+            border: 1px solid rgba(96, 165, 250, 0.3);
+            color: #60a5fa;
+            border-radius: 4px;
+            padding: 4px 10px;
+            font-size: 0.78rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-edit-problema:hover { background: rgba(96, 165, 250, 0.2); }
+
+        .badge {
+            display: inline-block;
+            padding: 0.2rem 0.7rem;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+
+        .badge-facil    { background: #052e16; color: #4ade80; }
+        .badge-medio    { background: #1c1917; color: #fbbf24; }
+        .badge-dificil  { background: #1c0a0a; color: #f87171; }
+        .badge-disponible   { background: #052e16; color: #4ade80; }
+        .badge-nodisponible { background: #1f2232; color: #6b7280; }
+
         /* ── TOAST ── */
         #toast {
             position: fixed;
@@ -436,6 +533,7 @@
         #toast.show { opacity: 1; transform: translateY(0); }
         #toast.ok { background: #052e16; border: 1px solid #4ade80; color: #4ade80; }
         #toast.err { background: #1c0a0a; border: 1px solid #7f1d1d; color: #f87171; }
+        #toast.advertencia { background: #1c1917; border: 1px solid #fbbf24; color: #fbbf24; }
 
         @keyframes fadeUp {
             from { opacity: 0; transform: translateY(10px); }
@@ -483,12 +581,25 @@
             </div>
         </section>
 
-        <!-- SECCIÓN 2: CREAR PROBLEMA -->
+        <!-- SECCIÓN 2: PROBLEMAS -->
         <section id="sec-problemas" class="section active">
             <div class="page-header">
-                <h1>Nuevo <span>Problema</span></h1>
-                <p>Completa todos los campos y define los casos de prueba públicos y privados.</p>
+                <h1>Gestión de <span>Problemas</span></h1>
+                <p>Crea nuevos problemas o edita los existentes.</p>
             </div>
+
+            <!-- TABS PARA CREAR/EDITAR -->
+            <div class="subsection-tabs">
+                <button class="tab-btn active" onclick="mostrarSubseccion('crear')">
+                    ➕ Crear problema
+                </button>
+                <button class="tab-btn" onclick="mostrarSubseccion('editar')">
+                    ✏️ Editar problema
+                </button>
+            </div>
+
+            <!-- SUBSECCIÓN: CREAR PROBLEMA -->
+            <div id="subsec-crear" class="subsection active">
 
             <!-- INFO BÁSICA -->
             <div class="card">
@@ -599,6 +710,12 @@
                     Guardar problema
                 </button>
             </div>
+            </div>
+
+            <!-- SUBSECCIÓN: EDITAR PROBLEMA -->
+            <div id="subsec-editar" class="subsection">
+                <div id="lista-problemas-editar"></div>
+            </div>
 
         </section>
     </main>
@@ -613,6 +730,93 @@
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
         document.getElementById('sec-' + id).classList.add('active');
         event.currentTarget.classList.add('active');
+    }
+
+    // ── SUBSECCIONES ──
+    function mostrarSubseccion(id) {
+        document.querySelectorAll('.subsection').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('subsec-' + id).classList.add('active');
+        event.currentTarget.classList.add('active');
+        
+        if (id === 'editar') {
+            cargarListaProblemas();
+        }
+    }
+
+    // ── CARGAR LISTA DE PROBLEMAS PARA EDITAR ──
+    async function cargarListaProblemas() {
+        const contenedor = document.getElementById('lista-problemas-editar');
+        contenedor.innerHTML = '<p style="text-align:center; color:#6b7280;">Cargando problemas…</p>';
+        
+        try {
+            const res = await fetch('/api/problems');
+            if (!res.ok) throw new Error('Error al cargar problemas');
+            const problemas = await res.json();
+            
+            if (problemas.length === 0) {
+                contenedor.innerHTML = '<p style="text-align:center; color:#6b7280;">No hay problemas para editar.</p>';
+                return;
+            }
+            
+            let html = `
+                <table class="problemas-tabla">
+                    <thead>
+                        <tr>
+                            <th>Título</th>
+                            <th>Categoría</th>
+                            <th>Dificultad</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            problemas.forEach(p => {
+                const badgeClass = 'badge-' + (p.dificultad || '');
+                const dificultadLabel = p.dificultad ? 
+                    p.dificultad.charAt(0).toUpperCase() + p.dificultad.slice(1) : '—';
+                const estadoLabel = p.esta_activo ? 'Activo' : 'Inactivo';
+                const estadoClass = p.esta_activo ? 'badge-disponible' : 'badge-nodisponible';
+                
+                html += `
+                    <tr>
+                        <td>${escapeHtml(p.titulo)}</td>
+                        <td>${escapeHtml(p.categoria || '—')}</td>
+                        <td><span class="badge ${badgeClass}">${dificultadLabel}</span></td>
+                        <td><span class="badge ${estadoClass}">${estadoLabel}</span></td>
+                        <td>
+                            <div class="problema-acciones">
+                                <button class="btn-edit-problema" onclick="editarProblema('${p.id}')">
+                                    ✏️ Editar
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                    </tbody>
+                </table>
+            `;
+            
+            contenedor.innerHTML = html;
+        } catch (err) {
+            contenedor.innerHTML = '<p style="text-align:center; color:#f87171;">Error al cargar problemas: ' + err.message + '</p>';
+        }
+    }
+
+    function editarProblema(id) {
+        toast('Edición de problemas estará disponible pronto', 'advertencia');
+    }
+
+    function escapeHtml(str) {
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
     }
 
     // ── TOGGLE LABEL ──
