@@ -539,9 +539,28 @@
                 </div>
             </div>
 
+            <!-- CÓDIGOS BASE -->
+            <div class="card">
+                <div class="card-title">03 — Código base por lenguaje</div>
+                <div class="form-grid">
+                    <div class="field form-full">
+                        <label>Código base Python</label>
+                        <textarea id="codigo_base_python" rows="4" placeholder="def solve(...):\n    pass"></textarea>
+                    </div>
+                    <div class="field form-full">
+                        <label>Código base Java</label>
+                        <textarea id="codigo_base_java" rows="4" placeholder="public class Solution {\n    public void solve() {\n    }\n}"></textarea>
+                    </div>
+                    <div class="field form-full">
+                        <label>Código base C++</label>
+                        <textarea id="codigo_base_cpp" rows="4" placeholder="#include <iostream>\nusing namespace std;"></textarea>
+                    </div>
+                </div>
+            </div>
+
             <!-- LÍMITES -->
             <div class="card">
-                <div class="card-title">03 — Límites de ejecución</div>
+                <div class="card-title">04 — Límites de ejecución</div>
                 <div class="form-grid">
                     <div class="field">
                         <label>Tiempo límite (ms)</label>
@@ -566,7 +585,7 @@
 
             <!-- CASOS DE PRUEBA -->
             <div class="card">
-                <div class="card-title">04 — Casos de prueba</div>
+                <div class="card-title">05 — Casos de prueba</div>
                 <div class="casos-list" id="casos-list"></div>
                 <button class="btn-add" onclick="agregarCaso()">
                     + Agregar caso de prueba
@@ -716,6 +735,9 @@
             restricciones: document.getElementById('restricciones').value.trim() || null,
             ejemplo_entrada: document.getElementById('ejemplo_entrada').value.trim() || null,
             ejemplo_salida: document.getElementById('ejemplo_salida').value.trim() || null,
+            codigo_base_python: document.getElementById('codigo_base_python').value.trim() || null,
+            codigo_base_java: document.getElementById('codigo_base_java').value.trim() || null,
+            codigo_base_cpp: document.getElementById('codigo_base_cpp').value.trim() || null,
             limite_tiempo_ms: parseInt(document.getElementById('limite_tiempo_ms').value) || null,
             limite_memoria_mb: parseInt(document.getElementById('limite_memoria_mb').value) || null,
             esta_activo: document.getElementById('esta_activo').checked,
@@ -754,7 +776,7 @@
 
     // ── LIMPIAR ──
     function limpiarForm() {
-        ['titulo','descripcion','restricciones','ejemplo_entrada','ejemplo_salida'].forEach(id => {
+        ['titulo','descripcion','restricciones','ejemplo_entrada','ejemplo_salida','codigo_base_python','codigo_base_java','codigo_base_cpp'].forEach(id => {
             document.getElementById(id).value = '';
         });
         document.getElementById('categoria_id').value = '';
