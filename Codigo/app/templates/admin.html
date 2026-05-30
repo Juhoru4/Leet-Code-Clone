@@ -500,6 +500,20 @@
 
         .btn-edit-problema:hover { background: rgba(96, 165, 250, 0.2); }
 
+        .btn-delete-problema {
+            background: rgba(248, 113, 113, 0.1);
+            border: 1px solid rgba(248, 113, 113, 0.3);
+            color: #f87171;
+            border-radius: 4px;
+            padding: 4px 10px;
+            font-size: 0.78rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-delete-problema:hover { background: rgba(248, 113, 113, 0.2); }
+
         .badge {
             display: inline-block;
             padding: 0.2rem 0.7rem;
@@ -591,10 +605,10 @@
             <!-- TABS PARA CREAR/EDITAR -->
             <div class="subsection-tabs">
                 <button class="tab-btn active" onclick="mostrarSubseccion('crear')">
-                    ➕ Crear problema
+                    Crear problema
                 </button>
                 <button class="tab-btn" onclick="mostrarSubseccion('editar')">
-                    ✏️ Editar problema
+                    Editar problema
                 </button>
             </div>
 
@@ -724,6 +738,9 @@
 <div id="toast"></div>
 
 <script>
+    // ── ESTADO GLOBAL ──
+    let problemaEnEdicion = null; // ID del problema siendo editado
+
     // ── NAV ──
     function showSection(id) {
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
@@ -737,7 +754,14 @@
         document.querySelectorAll('.subsection').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.getElementById('subsec-' + id).classList.add('active');
-        event.currentTarget.classList.add('active');
+        
+        // Activar el botón correspondiente
+        const btns = document.querySelectorAll('.tab-btn');
+        btns.forEach((btn, idx) => {
+            if ((idx === 0 && id === 'crear') || (idx === 1 && id === 'editar')) {
+                btn.classList.add('active');
+            }
+        });
         
         if (id === 'editar') {
             cargarListaProblemas();
@@ -791,6 +815,7 @@
                                 <button class="btn-edit-problema" onclick="editarProblema('${p.id}')">
                                     Editar
                                 </button>
+                                <button class="btn-delete-problema" onclick="eliminarProblema('${p.id}', '${escapeHtml(p.titulo).replace(/'/g, "\\'")}')">Eliminar</button>
                             </div>
                         </td>
                     </tr>
@@ -808,8 +833,114 @@
         }
     }
 
-    function editarProblema(id) {
-        //toast('Edición de problemas estará disponible pronto', 'advertencia');
+    async function editarProblema(id) {
+        try {
+            const res = await fetch(`/api/problems/${id}`);
+            if (!res.ok) throw new Error('Problema no encontrado');
+            const problema = await res.json();
+            
+            // Cargar datos en el formulario
+            document.getElementById('titulo').value = problema.titulo;
+            document.getElementById('descripcion').value = problema.descripcion;
+            document.getElementById('categoria_id').value = problema.categoria_id || '';
+            document.getElementById('dificultad').value = problema.dificultad || '';
+            document.getElementById('restricciones').value = problema.restricciones || '';
+            document.getElementById('ejemplo_entrada').value = problema.ejemplo_entrada || '';
+            document.getElementById('ejemplo_salida').value = problema.ejemplo_salida || '';
+            document.getElementById('codigo_base_python').value = problema.codigo_base_python || '';
+            document.getElementById('codigo_base_java').value = problema.codigo_base_java || '';
+            document.getElementById('codigo_base_cpp').value = problema.codigo_base_cpp || '';
+            document.getElementById('limite_tiempo_ms').value = problema.limite_tiempo_ms || '';
+            document.getElementById('limite_memoria_mb').value = problema.limite_memoria_mb || '';
+            document.getElementById('esta_activo').checked = problema.esta_activo;
+            document.getElementById('toggle-label-text').textContent = problema.esta_activo ? 'Activo' : 'Inactivo';
+            
+            // Cargar casos de prueba
+            document.getElementById('casos-list').innerHTML = '';
+            casosCount = 0;
+            (problema.casos_prueba || []).forEach(caso => {
+                agregarCasoConDatos(caso);
+            });
+            
+            // Cambiar botón y estado
+            problemaEnEdicion = id;
+            const btn = document.getElementById('btn-guardar');
+            btn.textContent = 'Actualizar problema';
+            
+            // Cambiar a tab crear/formulario
+            mostrarSubseccion('crear');
+            
+            toast('Problema cargado para edición', 'ok');
+        } catch (e) {
+            toast('Error al cargar el problema: ' + e.message, 'err');
+        }
+    }
+    
+    function agregarCasoConDatos(casoData) {
+        casosCount++;
+        const n = casosCount;
+        const lista = document.getElementById('casos-list');
+
+        const div = document.createElement('div');
+        div.className = 'caso-item';
+        div.id = `caso-${n}`;
+        
+        const isPublico = casoData.es_publico ? 'pub' : 'priv';
+        const badgeText = casoData.es_publico ? 'PÚBLICO' : 'PRIVADO';
+        
+        div.innerHTML = `
+            <div class="caso-header">
+                <span class="caso-num">CASO #${n}</span>
+                <div class="caso-actions">
+                    <button class="badge-publico ${isPublico}" onclick="togglePublico(this)" title="Click para cambiar visibilidad">
+                        ${badgeText}
+                    </button>
+                    <button class="btn-remove-caso" onclick="eliminarCaso(${n})">✕ Eliminar</button>
+                </div>
+            </div>
+            <div class="caso-grid">
+                <div class="field">
+                    <label>Descripción</label>
+                    <input type="text" placeholder="Ej: Caso básico" data-caso="${n}" data-field="descripcion" value="${escapeHtml(casoData.descripcion || '')}">
+                </div>
+                <div class="field">
+                    <label>Entrada *</label>
+                    <textarea rows="2" placeholder="Valor de stdin" data-caso="${n}" data-field="entrada">${escapeHtml(casoData.entrada || '')}</textarea>
+                </div>
+                <div class="field">
+                    <label>Salida esperada *</label>
+                    <textarea rows="2" placeholder="Salida exacta esperada" data-caso="${n}" data-field="salida_esperada">${escapeHtml(casoData.salida_esperada || '')}</textarea>
+                </div>
+            </div>
+        `;
+        lista.appendChild(div);
+    }
+
+    async function eliminarProblema(id, titulo) {
+        if (!confirm(`¿Estás seguro de que deseas eliminar el problema "${titulo}"? Esta acción no se puede deshacer.`)) {
+            return;
+        }
+
+        try {
+            const res = await fetch(`/api/problems/${id}`, {
+                method: 'DELETE',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                toast(data.error || 'Error al eliminar', 'err');
+                return;
+            }
+
+            toast('✓ Problema eliminado correctamente', 'ok');
+            cargarListaProblemas();
+
+        } catch (e) {
+            toast('No se pudo conectar con el servidor', 'err');
+        }
     }
 
     function escapeHtml(str) {
@@ -953,8 +1084,13 @@
         btn.textContent = 'Guardando…';
 
         try {
-            const res = await fetch('/api/problems/crear', {
-                method: 'POST',
+            // Detectar si es creación o actualización
+            const isEditing = problemaEnEdicion !== null;
+            const endpoint = isEditing ? `/api/problems/${problemaEnEdicion}` : '/api/problems/crear';
+            const method = isEditing ? 'PUT' : 'POST';
+            
+            const res = await fetch(endpoint, {
+                method: method,
                 credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
@@ -967,14 +1103,15 @@
                 return;
             }
 
-            toast('✓ Problema guardado correctamente', 'ok');
+            const msg = isEditing ? '✓ Problema actualizado correctamente' : '✓ Problema guardado correctamente';
+            toast(msg, 'ok');
             limpiarForm();
 
         } catch (e) {
             toast('No se pudo conectar con el servidor', 'err');
         } finally {
             btn.disabled = false;
-            btn.textContent = 'Guardar problema';
+            btn.textContent = problemaEnEdicion ? 'Actualizar problema' : 'Guardar problema';
         }
     }
 
@@ -991,6 +1128,10 @@
         document.getElementById('toggle-label-text').textContent = 'Activo';
         document.getElementById('casos-list').innerHTML = '';
         casosCount = 0;
+        
+        // Limpiar estado de edición
+        problemaEnEdicion = null;
+        document.getElementById('btn-guardar').textContent = 'Guardar problema';
     }
 
     // ── TOAST ──
