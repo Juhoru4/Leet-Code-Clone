@@ -1,0 +1,86 @@
+body { font-family: sans-serif; margin: 20px; }
+
+        .contenedor { display: flex; gap: 20px; height: 80vh; }
+
+        .panel-problema { width: 40%; overflow-y: auto; }
+
+        /* Panel editor: columna flex con altura fija heredada del contenedor */
+        .panel-editor {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-height: 0;       /* clave: permite que flex children respeten el límite */
+            overflow: hidden;    /* evita que el panel crezca fuera del contenedor */
+        }
+
+        .casos-prueba {
+            margin-top: 12px;
+            border-top: 1px solid #ddd;
+            padding-top: 12px;
+        }
+
+        .caso-item {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            margin: 8px 0;
+            background: #fff;
+        }
+
+        .caso-item strong { display: block; margin-bottom: 6px; }
+
+        .caso-item pre {
+            margin: 6px 0 0;
+            padding: 8px;
+            background: #f8f8f8;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+
+        /* El textarea ocupa el espacio disponible pero nunca menos de 200px */
+        textarea {
+            flex: 1 1 0;
+            min-height: 200px;
+            width: 100%;
+            font-family: monospace;
+            font-size: 14px;
+            padding: 8px;
+            resize: none;
+            box-sizing: border-box;
+        }
+
+        select, button { padding: 6px 12px; font-size: 14px; }
+
+        /* Sección resultado: altura fija + scroll, nunca empuja al editor */
+        .resultado-wrapper {
+            flex: 0 0 auto;
+            max-height: 35%;
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .resultado-wrapper strong {
+            flex-shrink: 0;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        #resultado {
+            background: #f4f4f4;
+            padding: 10px;
+            flex: 1;
+            overflow-y: auto;   /* scroll en lugar de crecer */
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 13px;
+        }
+
+        #estado-ejecucion { flex-shrink: 0; min-height: 20px; font-size: 13px; font-weight: 600; }
+
+        .correcto    { color: green; }
+        .error       { color: red; }
+        .advertencia { color: orange; }
+        .ejecutando  { color: #b36b00; }
