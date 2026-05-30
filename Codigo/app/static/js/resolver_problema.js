@@ -1,7 +1,5 @@
-// Backend inyecta el ID del problema cuando renderiza esta plantilla.
-    // eslint-disable-next-line
-    // @ts-ignore
-    const PROBLEMA_ID={{problema_id|tojson}};
+// Backend inyecta el ID del problema en el HTML.
+const PROBLEMA_ID = window.PROBLEMA_ID;
 
     let codigoBasePorLenguaje = {};
     let codigoBaseActual = null;

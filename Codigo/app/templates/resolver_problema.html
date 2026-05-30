@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Resolver problema</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/resolver_problema.css') }}">
 
 </head>
 <body>
@@ -66,6 +67,10 @@
 </div>
 
 
+<script>
+    window.PROBLEMA_ID = {{ problema_id | tojson }};
+</script>
+<script src="{{ url_for('static', filename='js/resolver_problema.js') }}"></script>
 
 </body>
 </html>
