@@ -36,14 +36,135 @@
         <!-- SECCIÓN 1: AUDITORÍA -->
         <section id="sec-auditoria" class="section">
             <div class="page-header">
-                <h1>Auditoría <span>&</span> Trazabilidad</h1>
-                <p>Registro de acciones realizadas en la plataforma por administradores y usuarios.</p>
+                <h1>Auditoría <span>&amp;</span> Trazabilidad</h1>
+                <p>Registro de acciones realizadas en la plataforma.</p>
             </div>
-            <div class="audit-placeholder">
-                <div class="icon">🔒</div>
-                <h3>Módulo en desarrollo</h3>
-                <p>La auditoría y trazabilidad de acciones estará disponible próximamente.</p>
+
+            <!-- RF-05.6: Filtros -->
+            <div class="card" style="margin-bottom:1.5rem">
+                <div class="card-title">Filtros</div>
+                <div class="form-grid">
+                    <div class="field">
+                        <label>Usuario</label>
+                        <input type="text" id="filtro-usuario" placeholder="Buscar por usuario…" oninput="cargarLogs()">
+                    </div>
+                    <div class="field">
+                        <label>Tipo de evento</label>
+                        <select id="filtro-tipo" onchange="cargarLogs()">
+                            <option value="">Todos</option>
+                            <option value="inicio_sesion">Inicio de sesión</option>
+                            <option value="cierre_sesion">Cierre de sesión</option>
+                            <option value="registro">Registro</option>
+                            <option value="envio_solucion">Envío de solución</option>
+                            <option value="creacion_problema">Creación de problema</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label>Desde</label>
+                        <input type="date" id="filtro-desde" onchange="cargarLogs()">
+                    </div>
+                    <div class="field">
+                        <label>Hasta</label>
+                        <input type="date" id="filtro-hasta" onchange="cargarLogs()">
+                    </div>
+                </div>
             </div>
+
+            <!-- RF-05.5: Tabla de logs cronológica -->
+            <div class="card">
+                <div class="card-title" style="display:flex;justify-content:space-between;align-items:center">
+                    <span>Historial del sistema</span>
+                    <span id="logs-contador" style="font-size:0.8rem;color:var(--muted)"></span>
+                </div>
+                <div id="logs-error" style="display:none;color:#f87171;padding:0.75rem;font-size:0.9rem"></div>
+                <div style="overflow-x:auto">
+                    <table style="width:100%;border-collapse:collapse">
+                        <thead>
+                            <tr style="background:#12151f">
+                                <th style="text-align:left;padding:0.75rem 1rem;font-size:0.78rem;color:var(--muted);border-bottom:1px solid var(--border)">#</th>
+                                <th style="text-align:left;padding:0.75rem 1rem;font-size:0.78rem;color:var(--muted);border-bottom:1px solid var(--border)">Fecha y hora</th>
+                                <th style="text-align:left;padding:0.75rem 1rem;font-size:0.78rem;color:var(--muted);border-bottom:1px solid var(--border)">Usuario</th>
+                                <th style="text-align:left;padding:0.75rem 1rem;font-size:0.78rem;color:var(--muted);border-bottom:1px solid var(--border)">Tipo de evento</th>
+                                <th style="text-align:left;padding:0.75rem 1rem;font-size:0.78rem;color:var(--muted);border-bottom:1px solid var(--border)">Detalle</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logs-tbody">
+                            <tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--muted)">Cargando…</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <script>
+            const TIPO_LABELS = {
+                inicio_sesion:     '🔑 Inicio de sesión',
+                cierre_sesion:     '🚪 Cierre de sesión',
+                registro:          '📝 Registro',
+                envio_solucion:    '📤 Envío de solución',
+                creacion_problema: '➕ Creación de problema',
+            };
+
+            async function cargarLogs() {
+                const tbody   = document.getElementById('logs-tbody');
+                const errorEl = document.getElementById('logs-error');
+                const counter = document.getElementById('logs-contador');
+
+                const usuario = document.getElementById('filtro-usuario').value;
+                const tipo    = document.getElementById('filtro-tipo').value;
+                const desde   = document.getElementById('filtro-desde').value;
+                const hasta   = document.getElementById('filtro-hasta').value;
+
+                const params = new URLSearchParams();
+                if (usuario) params.append('usuario', usuario);
+                if (tipo)    params.append('tipo', tipo);
+                if (desde)   params.append('desde', desde);
+                if (hasta)   params.append('hasta', hasta);
+
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--muted)">Cargando…</td></tr>';
+                errorEl.style.display = 'none';
+
+                try {
+                    const res = await fetch('/api/admin/logs?' + params.toString());
+                    if (res.status === 403) throw new Error('Sin permisos de administrador.');
+                    if (!res.ok) throw new Error('Error del servidor: ' + res.status);
+                    const logs = await res.json();
+
+                    counter.textContent = logs.length + ' registro(s)';
+
+                    if (logs.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--muted)">No hay registros con ese filtro.</td></tr>';
+                        return;
+                    }
+
+                    tbody.innerHTML = logs.map((log, i) => {
+                        const fecha = log.fecha_hora
+                            ? new Date(log.fecha_hora).toLocaleString('es-CO')
+                            : '—';
+                        const tipoLabel = TIPO_LABELS[log.tipo_evento] || log.tipo_evento;
+                        return `
+                            <tr style="border-bottom:1px solid var(--border)">
+                                <td style="padding:0.75rem 1rem;color:var(--muted);font-size:0.85rem">${log.id}</td>
+                                <td style="padding:0.75rem 1rem;font-size:0.85rem;white-space:nowrap">${fecha}</td>
+                                <td style="padding:0.75rem 1rem;font-size:0.85rem">${log.nombre_usuario || '—'}</td>
+                                <td style="padding:0.75rem 1rem;font-size:0.85rem">${tipoLabel}</td>
+                                <td style="padding:0.75rem 1rem;font-size:0.82rem;color:var(--muted)">${log.detalle || '—'}</td>
+                            </tr>`;
+                    }).join('');
+
+                } catch (err) {
+                    errorEl.textContent = 'No se pudo cargar el historial: ' + err.message;
+                    errorEl.style.display = 'block';
+                    tbody.innerHTML = '';
+                    counter.textContent = '';
+                }
+            }
+
+            // Cargar logs automáticamente cuando se abre la sección
+            document.addEventListener('DOMContentLoaded', () => {
+                const btn = document.querySelector('[onclick="showSection(\'auditoria\')"]');
+                if (btn) btn.addEventListener('click', cargarLogs);
+            });
+            </script>
         </section>
 
         <!-- SECCIÓN 2: PROBLEMAS -->

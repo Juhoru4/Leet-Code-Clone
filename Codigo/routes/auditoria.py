@@ -1,5 +1,4 @@
 from flask import Blueprint, jsonify, request
-from app.auth import require_auth
 from models.log_evento import LogEvento
 from models.usuario import Usuario
 from datetime import datetime
@@ -9,73 +8,69 @@ auditoria_bp = Blueprint('auditoria', __name__, url_prefix='/api/admin')
 
 
 def require_admin(f):
-    """Verifica si el usuario autenticado tiene rol de administrador."""
-    @require_auth
+    """RF-05.4: Solo administradores pueden acceder."""
     @wraps(f)
-    def wrapper(g=None, *args, **kwargs):
+    def wrapper(*args, **kwargs):
         try:
-            from app.auth import _to_dict
-            user_dict = _to_dict(g)
-            user_id = user_dict.get('id')  or user_dict.get('user_id')
+            from app.auth import _to_dict, admin_client
+            token = request.cookies.get('access_token')
+            if not token:
+                return jsonify({'error': 'Sin autenticación.'}), 401
+
+            user_response = admin_client.auth.get_user(token)
+            user_dict = _to_dict(getattr(user_response, 'user', user_response))
+            user_id = user_dict.get('id') if isinstance(user_dict, dict) else None
+            print(f"[require_admin] user_id={user_id}")
+
+            if not user_id:
+                return jsonify({'error': 'Token inválido.'}), 401
+
             usuario = Usuario.query.get(user_id)
-            if not usuario or usuario.rol not in ('admin', 'administrador'):
-                return jsonify({'error': 'Acceso denegado. Solo administradores.'}), 403
+            print(f"[require_admin] rol={usuario.rol if usuario else 'None'}")
+
+            if not usuario or usuario.rol != 'admin':
+                return jsonify({'error': 'Acceso denegado.'}), 403
+
             return f(*args, **kwargs)
-        except Exception:
-            return jsonify({'error': 'No autorizado.'}), 403
+        except Exception as e:
+            print(f"[require_admin] EXCEPCION: {e}")
+            import traceback; traceback.print_exc()
+            return jsonify({'error': 'No autorizado.', 'detalle': str(e)}), 403
     return wrapper
+
 
 @auditoria_bp.route('/logs', methods=['GET'])
 @require_admin
-def get_logs(g=None):
+def get_logs():
     filtro_usuario = request.args.get('usuario')
-    filtro_tipo = request.args.get('tipo')
-    filtro_desde = request.args.get('desde')
-    filtro_hasta = request.args.get('hasta')
+    filtro_tipo    = request.args.get('tipo')
+    filtro_desde   = request.args.get('desde')
+    filtro_hasta   = request.args.get('hasta')
 
     query = LogEvento.query
 
-    # Filtrar por usuario
     if filtro_usuario:
-        query = query.filter(
-            LogEvento.nombre_usuario.ilike(f'%{filtro_usuario}%')
-        )
-
-    # Filtrar por tipo de evento
+        query = query.filter(LogEvento.nombre_usuario.ilike(f'%{filtro_usuario}%'))
     if filtro_tipo:
         query = query.filter_by(tipo_evento=filtro_tipo)
-
-    # Filtrar desde fecha
     if filtro_desde:
         try:
-            desde = datetime.strptime(filtro_desde, '%Y-%m-%d')
-            query = query.filter(LogEvento.fecha_hora >= desde)
+            query = query.filter(LogEvento.fecha_hora >= datetime.strptime(filtro_desde, '%Y-%m-%d'))
         except ValueError:
             pass
-
-    # Filtrar hasta fecha
     if filtro_hasta:
         try:
-            hasta = datetime.strptime(filtro_hasta, '%Y-%m-%d')
-            query = query.filter(LogEvento.fecha_hora <= hasta)
+            query = query.filter(LogEvento.fecha_hora <= datetime.strptime(filtro_hasta, '%Y-%m-%d'))
         except ValueError:
             pass
 
-    # RF-05.5: orden cronológico descendente (más reciente primero)
     logs = query.order_by(LogEvento.fecha_hora.desc()).limit(500).all()
-
-    return jsonify([log._to_dict() for log in logs]), 200
+    return jsonify([log.to_dict() for log in logs]), 200
 
 
 @auditoria_bp.route('/logs/tipos', methods=['GET'])
 @require_admin
-def get_tipos_evento(g=None):
-    tipos = [
-        'inicio_sesion',
-        'cierre_sesion',
-        'registro',
-        'envio_solucion',
-        'creacion_problema'
-    ]
-
+def get_tipos_evento():
+    tipos = ['inicio_sesion', 'cierre_sesion', 'registro',
+             'envio_solucion', 'creacion_problema']
     return jsonify(tipos), 200
