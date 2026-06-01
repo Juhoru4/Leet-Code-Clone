@@ -157,10 +157,13 @@ def test_run():
     
     # HU5: registrar envío de solución
     from routes.auditoria import registrar_evento
+    from models.usuario import Usuario
+
+    usuario = Usuario.query.get(g.current_user_id)
     registrar_evento(
         tipo_evento='envio_solucion',
         usuario_id=str(envio.usuario_id) if hasattr(envio, 'usuario_id') else None,
-        nombre_usuario=None,
+        nombre_usuario=usuario.nombre if usuario else 'Desconocido',
         detalle=f'Problema: {problema_id} | Lenguaje: {lenguaje} | Casos pasados: {casos_pasados}/{len(casos)}'
     )
 

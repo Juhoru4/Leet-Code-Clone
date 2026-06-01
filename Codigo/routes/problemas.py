@@ -1,6 +1,7 @@
 """Endpoints para listar problemas y obtener su informacion."""
 
 from flask import Blueprint, jsonify, request, render_template, redirect, url_for, g
+from Codigo.models import usuario
 from app.auth import require_auth
 from models.problema import Problema
 from models.caso_prueba import CasoPrueba
@@ -153,10 +154,13 @@ def crear_problema():
     
     # HU5: registrar creación de problema
     from routes.auditoria import registrar_evento
+    from models.usuario import Usuario
+    
+    usuario = Usuario.query.get(g.current_user_id)
     registrar_evento(
         tipo_evento='creacion_problema',
         usuario_id=str(g.current_user_id),
-        nombre_usuario=None,
+        nombre_usuario=usuario.nombre if usuario else 'Desconocido',
         detalle=f'Problema creado: {nuevo_problema.titulo}'
     )
 
