@@ -1,15 +1,7 @@
 from flask import render_template
-
-# Compatibilidad: permite ejecutar como modulo (python -m Codigo.main)
-# y tambien como script directo (python Codigo/main.py).
-try:
-    from Codigo.app import create_app
-    from Codigo.app.extensions import db
-    from Codigo.models import Usuario, Categoria, Problema, Envio, ResultadoEnvio, CasoPrueba
-except ModuleNotFoundError:
-    from app import create_app
-    from app.extensions import db
-    from models import Usuario, Categoria, Problema, Envio, ResultadoEnvio, CasoPrueba
+from app import create_app
+from app.extensions import db
+from models import Usuario, Categoria, Problema, Envio, ResultadoEnvio, CasoPrueba
 import os
 
 # Crear la aplicación

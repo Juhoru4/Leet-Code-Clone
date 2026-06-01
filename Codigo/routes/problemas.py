@@ -1,11 +1,12 @@
 """Endpoints para listar problemas y obtener su informacion."""
 
 from flask import Blueprint, jsonify, request, render_template, redirect, url_for, g
-from Codigo.app.auth import require_auth
-from Codigo.models.problema import Problema
-from Codigo.models.caso_prueba import CasoPrueba
+from app.auth import require_auth
+from models.problema import Problema
+from models.caso_prueba import CasoPrueba
+from models.categoria import Categoria
 import uuid
-from Codigo.app.extensions import db
+from app.extensions import db
 
 problems_bp = Blueprint('problems', __name__)
 
@@ -47,13 +48,38 @@ def get_problems():
 
     return jsonify([p.to_dict() for p in problemas])
 
+
+@problems_bp.route('/api/categories', methods=['GET'])
+def get_categories():
+    """Retorna todas las categorías disponibles."""
+    categorias = Categoria.query.all()
+    return jsonify({
+        "categorias": [cat.to_dict() for cat in categorias]
+    }), 200
+
 @problems_bp.route('/api/problems/<problema_id>', methods=['GET'])
 def get_problem(problema_id):
-    """Retorna un problema específico por su ID."""
+    """Retorna un problema específico por su ID con sus casos de prueba."""
     problema = Problema.query.get(problema_id)
     if problema is None:
         return jsonify({"error": "Problema no encontrado"}), 404
-    return jsonify(problema.to_dict()), 200
+
+    problema_dict = problema.to_dict()
+
+    casos = CasoPrueba.query.filter_by(problema_id=problema_id).order_by(CasoPrueba.orden).all()
+    problema_dict['casos_prueba'] = [
+        {
+            'id': caso.id,
+            'descripcion': caso.descripcion,
+            'entrada': caso.entrada,
+            'salida_esperada': caso.salida_esperada,
+            'es_publico': caso.es_publico,
+            'orden': caso.orden,
+        }
+        for caso in casos
+    ]
+
+    return jsonify(problema_dict), 200
 
 
 @problems_bp.route('/api/problems/<problema_id>/test-cases', methods=['GET'])
@@ -93,19 +119,109 @@ def crear_problema():
         titulo=data.get('titulo'),
         descripcion=data.get('descripcion'),
         dificultad=data.get('dificultad'),
+        categoria_id=data.get('categoria_id'),
         restricciones=data.get('restricciones'),
         ejemplo_entrada=data.get('ejemplo_entrada'),
         ejemplo_salida=data.get('ejemplo_salida'),
+        codigo_base_python=data.get('codigo_base_python'),
+        codigo_base_java=data.get('codigo_base_java'),
+        codigo_base_cpp=data.get('codigo_base_cpp'),
         limite_tiempo_ms=data.get('limite_tiempo_ms'),
         limite_memoria_mb=data.get('limite_memoria_mb'),
-        esta_activo=True,
+        esta_activo=data.get('esta_activo', True),
         creado_por=g.current_user_id
     )
 
     db.session.add(nuevo_problema)
+    db.session.flush()
+
+    casos_prueba = data.get('casos_prueba', [])
+    for caso_data in casos_prueba:
+        caso = CasoPrueba(
+            id=str(uuid.uuid4()),
+            problema_id=nuevo_problema.id,
+            descripcion=caso_data.get('descripcion'),
+            entrada=caso_data.get('entrada'),
+            salida_esperada=caso_data.get('salida_esperada'),
+            es_publico=caso_data.get('es_publico', True),
+            orden=caso_data.get('orden', 1),
+        )
+        db.session.add(caso)
+
     db.session.commit()
 
     return jsonify({
         "mensaje": "Problema creado",
         "problema": nuevo_problema.to_dict()
     }), 201
+
+
+@problems_bp.route('/api/problems/<problema_id>', methods=['PUT'])
+@require_auth
+def actualizar_problema(problema_id):
+    """Actualiza un problema existente y sus casos de prueba."""
+    problema = Problema.query.get(problema_id)
+    if problema is None:
+        return jsonify({"error": "Problema no encontrado"}), 404
+
+    data = request.get_json()
+
+    try:
+        problema.titulo = data.get('titulo')
+        problema.descripcion = data.get('descripcion')
+        problema.dificultad = data.get('dificultad')
+        problema.categoria_id = data.get('categoria_id')
+        problema.restricciones = data.get('restricciones')
+        problema.ejemplo_entrada = data.get('ejemplo_entrada')
+        problema.ejemplo_salida = data.get('ejemplo_salida')
+        problema.codigo_base_python = data.get('codigo_base_python')
+        problema.codigo_base_java = data.get('codigo_base_java')
+        problema.codigo_base_cpp = data.get('codigo_base_cpp')
+        problema.limite_tiempo_ms = data.get('limite_tiempo_ms')
+        problema.limite_memoria_mb = data.get('limite_memoria_mb')
+        problema.esta_activo = data.get('esta_activo', True)
+
+        db.session.flush()
+
+        CasoPrueba.query.filter_by(problema_id=problema_id).delete()
+
+        casos_prueba = data.get('casos_prueba', [])
+        for caso_data in casos_prueba:
+            caso = CasoPrueba(
+                id=str(uuid.uuid4()),
+                problema_id=problema_id,
+                descripcion=caso_data.get('descripcion'),
+                entrada=caso_data.get('entrada'),
+                salida_esperada=caso_data.get('salida_esperada'),
+                es_publico=caso_data.get('es_publico', True),
+                orden=caso_data.get('orden', 1),
+            )
+            db.session.add(caso)
+
+        db.session.commit()
+
+        return jsonify({
+            "mensaje": "Problema actualizado correctamente",
+            "problema": problema.to_dict()
+        }), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": f"Error al actualizar: {str(e)}"}), 500
+
+
+@problems_bp.route('/api/problems/<problema_id>', methods=['DELETE'])
+@require_auth
+def eliminar_problema(problema_id):
+    """Elimina un problema y todos sus casos de prueba asociados."""
+    problema = Problema.query.get(problema_id)
+    if problema is None:
+        return jsonify({"error": "Problema no encontrado"}), 404
+
+    try:
+        CasoPrueba.query.filter_by(problema_id=problema_id).delete()
+        db.session.delete(problema)
+        db.session.commit()
+        return jsonify({"mensaje": "Problema eliminado correctamente"}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": f"Error al eliminar: {str(e)}"}), 500

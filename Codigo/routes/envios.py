@@ -2,12 +2,12 @@
 
 import uuid
 from flask import Blueprint, jsonify, request
-from Codigo.app.auth import require_auth
-from Codigo.app.extensions import db
-from Codigo.services.ejecucion.ejecutor import ejecutar_codigo
-from Codigo.models.envio import Envio
-from Codigo.models.caso_prueba import CasoPrueba
-from Codigo.models.resultado_envio import ResultadoEnvio
+from app.auth import require_auth
+from app.extensions import db
+from services.ejecucion.ejecutor import ejecutar_codigo
+from models.envio import Envio
+from models.caso_prueba import CasoPrueba
+from models.resultado_envio import ResultadoEnvio
 
 
 submissions_bp = Blueprint("submissions", __name__)
