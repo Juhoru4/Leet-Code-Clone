@@ -150,6 +150,15 @@ def crear_problema():
         db.session.add(caso)
 
     db.session.commit()
+    
+    # HU5: registrar creación de problema
+    from routes.auditoria import registrar_evento
+    registrar_evento(
+        tipo_evento='creacion_problema',
+        usuario_id=str(g.current_user_id),
+        nombre_usuario=None,
+        detalle=f'Problema creado: {nuevo_problema.titulo}'
+    )
 
     return jsonify({
         "mensaje": "Problema creado",
