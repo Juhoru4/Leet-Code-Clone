@@ -48,6 +48,7 @@ def get_problems():
 
     return jsonify([p.to_dict() for p in problemas])
 
+
 @problems_bp.route('/api/categories', methods=['GET'])
 def get_categories():
     """Retorna todas las categorías disponibles."""
@@ -62,10 +63,9 @@ def get_problem(problema_id):
     problema = Problema.query.get(problema_id)
     if problema is None:
         return jsonify({"error": "Problema no encontrado"}), 404
-    
+
     problema_dict = problema.to_dict()
-    
-    # Incluir todos los casos de prueba (públicos y privados) para edición
+
     casos = CasoPrueba.query.filter_by(problema_id=problema_id).order_by(CasoPrueba.orden).all()
     problema_dict['casos_prueba'] = [
         {
@@ -74,11 +74,11 @@ def get_problem(problema_id):
             'entrada': caso.entrada,
             'salida_esperada': caso.salida_esperada,
             'es_publico': caso.es_publico,
-            'orden': caso.orden
+            'orden': caso.orden,
         }
         for caso in casos
     ]
-    
+
     return jsonify(problema_dict), 200
 
 
@@ -133,9 +133,8 @@ def crear_problema():
     )
 
     db.session.add(nuevo_problema)
-    db.session.flush()  # Para obtener el ID antes de hacer commit
+    db.session.flush()
 
-    # Crear los casos de prueba
     casos_prueba = data.get('casos_prueba', [])
     for caso_data in casos_prueba:
         caso = CasoPrueba(
@@ -145,7 +144,7 @@ def crear_problema():
             entrada=caso_data.get('entrada'),
             salida_esperada=caso_data.get('salida_esperada'),
             es_publico=caso_data.get('es_publico', True),
-            orden=caso_data.get('orden', 1)
+            orden=caso_data.get('orden', 1),
         )
         db.session.add(caso)
 
@@ -173,11 +172,10 @@ def actualizar_problema(problema_id):
     problema = Problema.query.get(problema_id)
     if problema is None:
         return jsonify({"error": "Problema no encontrado"}), 404
-    
+
     data = request.get_json()
-    
+
     try:
-        # Actualizar campos del problema
         problema.titulo = data.get('titulo')
         problema.descripcion = data.get('descripcion')
         problema.dificultad = data.get('dificultad')
@@ -191,14 +189,11 @@ def actualizar_problema(problema_id):
         problema.limite_tiempo_ms = data.get('limite_tiempo_ms')
         problema.limite_memoria_mb = data.get('limite_memoria_mb')
         problema.esta_activo = data.get('esta_activo', True)
-        
+
         db.session.flush()
-        
-        # Actualizar casos de prueba
-        # Primero, eliminar los casos existentes
+
         CasoPrueba.query.filter_by(problema_id=problema_id).delete()
-        
-        # Luego, crear los nuevos casos
+
         casos_prueba = data.get('casos_prueba', [])
         for caso_data in casos_prueba:
             caso = CasoPrueba(
@@ -208,12 +203,12 @@ def actualizar_problema(problema_id):
                 entrada=caso_data.get('entrada'),
                 salida_esperada=caso_data.get('salida_esperada'),
                 es_publico=caso_data.get('es_publico', True),
-                orden=caso_data.get('orden', 1)
+                orden=caso_data.get('orden', 1),
             )
             db.session.add(caso)
-        
+
         db.session.commit()
-        
+
         return jsonify({
             "mensaje": "Problema actualizado correctamente",
             "problema": problema.to_dict()
@@ -232,7 +227,7 @@ def eliminar_problema(problema_id):
         return jsonify({"error": "Problema no encontrado"}), 404
 
     try:
-        # Los casos de prueba se eliminan automáticamente por cascade
+        CasoPrueba.query.filter_by(problema_id=problema_id).delete()
         db.session.delete(problema)
         db.session.commit()
         return jsonify({"mensaje": "Problema eliminado correctamente"}), 200

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}LeetCode Clone{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        'brand-dark': '#0B0F19',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="w-full min-h-screen bg-brand-dark text-slate-200 antialiased font-sans">
+    <div id="app-container" class="relative min-h-screen">
+        
+        <!-- Header -->
+        <header class="sticky top-0 z-40 w-full bg-slate-900/40 backdrop-blur-md border-b border-slate-800/50">
+            <div class="container mx-auto px-4 sm:px-8 lg:px-16">
+                <div class="flex items-center justify-between h-16">
+                    <a href="{{ url_for('problems.home') }}" class="text-2xl font-extrabold tracking-tight">
+                        <span class="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-sky-400 to-emerald-400">CodeChallenge</span>
+                    </a>
+                    <nav class="hidden md:flex items-center space-x-8">
+                        <a href="{{ url_for('problems.index') }}" class="text-slate-300 hover:text-white transition-colors duration-300">Problemas</a>
+                        <a href="#" class="text-slate-300 hover:text-white transition-colors duration-300">Rankings</a>
+                        {% if g.current_user %}
+                            <a href="{{ url_for('auth.logout') }}" class="text-slate-300 hover:text-white transition-colors duration-300">Logout</a>
+                        {% else %}
+                            <a href="{{ url_for('auth.ui') }}" class="text-slate-300 hover:text-white transition-colors duration-300">Login</a>
+                        {% endif %}
+                    </nav>
+                    <div class="md:hidden">
+                        <!-- Mobile menu button -->
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="px-4 sm:px-8 lg:px-16 py-12 md:py-24">
+            {% block content %}{% endblock %}
+        </main>
+
+        <!-- Footer -->
+        <footer class="w-full border-t border-slate-800/50 mt-24">
+            <div class="container mx-auto px-4 sm:px-8 lg:px-16 py-8 text-center text-slate-500">
+                <p>&copy; 2026 CodeChallenge. Todos los derechos reservados.</p>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>
