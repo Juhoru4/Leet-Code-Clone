@@ -139,8 +139,13 @@ def ejecutar_codigo(codigo: str, lenguaje: str, timeout_ms: int = None, memory_m
                 wrapper = textwrap.dedent(f"""
 # Auto-generated invocation wrapper
 if __name__ == '__main__':
-    import sys, traceback
-    _input = sys.stdin.read().strip()
+    import sys, traceback, json
+    _input_str = sys.stdin.read().strip()
+    _input = _input_str
+    try:
+        _input = json.loads(_input_str)
+    except (json.JSONDecodeError, ValueError):
+        pass
     try:
         try:
             _res = {fname}()

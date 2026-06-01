@@ -1,56 +1,40 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel Administrador — LeetCode Clone</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
-</head>
-<body>
+{% extends "base.html" %}
 
-<header>
-    <div class="logo-group">
-        <a class="logo" href="#">LeetCode Clone</a>
-        <span class="admin-badge">ADMIN</span>
-    </div>
-</header>
+{% block title %}Panel Admin - CodeChallenge{% endblock %}
 
-<div class="shell">
-
-    <!-- SIDEBAR -->
-    <nav>
-        <div class="nav-section">
-            <div class="nav-label">Panel</div>
-            <button class="nav-item" onclick="showSection('auditoria')">
-                <span class="nav-icon">🔍</span> Auditoría
+{% block content %}
+<section class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-8">
+    <aside class="md:col-span-3 bg-slate-900/60 backdrop-blur-xl border border-slate-800/50 rounded-3xl p-4 sm:p-6">
+        <div class="mb-6">
+            <p class="text-xs uppercase tracking-[0.2em] text-slate-500">Panel</p>
+            <h1 class="mt-2 text-2xl font-extrabold tracking-tight text-white">Administrador</h1>
+        </div>
+        <div class="space-y-2">
+            <button type="button" class="nav-item w-full text-left rounded-xl px-4 py-3 text-sm font-medium text-slate-300 border border-slate-800 bg-slate-900/50 hover:bg-slate-800/80 transition-all" data-section="auditoria" onclick="showSection('auditoria', this)">
+                Auditoría
             </button>
-            <button class="nav-item active" onclick="showSection('problemas')">
-                <span class="nav-icon">📝</span> Problemas
+            <button type="button" class="nav-item active w-full text-left rounded-xl px-4 py-3 text-sm font-medium text-white border border-indigo-500/40 bg-indigo-500/10" data-section="problemas" onclick="showSection('problemas', this)">
+                Problemas
             </button>
         </div>
-    </nav>
+    </aside>
 
-    <!-- MAIN -->
-    <main>
-
-        <!-- SECCIÓN 1: AUDITORÍA -->
-        <section id="sec-auditoria" class="section">
-            <div class="page-header">
-                <h1>Auditoría <span>&amp;</span> Trazabilidad</h1>
-                <p>Registro de acciones realizadas en la plataforma.</p>
-            </div>
+    <main class="md:col-span-9 space-y-6">
+        <section id="sec-auditoria" class="section hidden bg-slate-900/60 backdrop-blur-xl border border-slate-800/50 rounded-3xl p-8">
+            <h2 class="font-extrabold tracking-tight text-white text-3xl">Auditoría y Trazabilidad</h2>
+            <p class="mt-3 text-base text-slate-400 leading-relaxed">Registro de acciones realizadas en la plataforma por administradores y usuarios.</p>
 
             <!-- RF-05.6: Filtros -->
-            <div class="card" style="margin-bottom:1.5rem">
+            <div class="card mb-8">
                 <div class="card-title">Filtros</div>
-                <div class="form-grid">
-                    <div class="field">
-                        <label>Usuario</label>
-                        <input type="text" id="filtro-usuario" placeholder="Buscar por usuario…" oninput="cargarLogs()">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block mb-2 text-sm text-slate-300">Usuario</label>
+                        <input type="text" id="filtro-usuario" placeholder="Buscar por usuario…" oninput="cargarLogs()" class="w-full rounded-xl border border-slate-700 bg-slate-900/50 px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     </div>
-                    <div class="field">
-                        <label>Tipo de evento</label>
-                        <select id="filtro-tipo" onchange="cargarLogs()">
+                    <div>
+                        <label class="block mb-2 text-sm text-slate-300">Tipo de evento</label>
+                        <select id="filtro-tipo" onchange="cargarLogs()" class="w-full rounded-xl border border-slate-700 bg-slate-900/50 px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                             <option value="">Todos</option>
                             <option value="inicio_sesion">Inicio de sesión</option>
                             <option value="cierre_sesion">Cierre de sesión</option>
@@ -59,13 +43,13 @@
                             <option value="creacion_problema">Creación de problema</option>
                         </select>
                     </div>
-                    <div class="field">
-                        <label>Desde</label>
-                        <input type="date" id="filtro-desde" onchange="cargarLogs()">
+                    <div>
+                        <label class="block mb-2 text-sm text-slate-300">Desde</label>
+                        <input type="date" id="filtro-desde" onchange="cargarLogs()" class="w-full rounded-xl border border-slate-700 bg-slate-900/50 px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     </div>
-                    <div class="field">
-                        <label>Hasta</label>
-                        <input type="date" id="filtro-hasta" onchange="cargarLogs()">
+                    <div>
+                        <label class="block mb-2 text-sm text-slate-300">Hasta</label>
+                        <input type="date" id="filtro-hasta" onchange="cargarLogs()" class="w-full rounded-xl border border-slate-700 bg-slate-900/50 px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     </div>
                 </div>
             </div>
@@ -94,207 +78,113 @@
                     </table>
                 </div>
             </div>
-
-            <script>
-            const TIPO_LABELS = {
-                inicio_sesion:     '🔑 Inicio de sesión',
-                cierre_sesion:     '🚪 Cierre de sesión',
-                registro:          '📝 Registro',
-                envio_solucion:    '📤 Envío de solución',
-                creacion_problema: '➕ Creación de problema',
-            };
-
-            async function cargarLogs() {
-                const tbody   = document.getElementById('logs-tbody');
-                const errorEl = document.getElementById('logs-error');
-                const counter = document.getElementById('logs-contador');
-
-                const usuario = document.getElementById('filtro-usuario').value;
-                const tipo    = document.getElementById('filtro-tipo').value;
-                const desde   = document.getElementById('filtro-desde').value;
-                const hasta   = document.getElementById('filtro-hasta').value;
-
-                const params = new URLSearchParams();
-                if (usuario) params.append('usuario', usuario);
-                if (tipo)    params.append('tipo', tipo);
-                if (desde)   params.append('desde', desde);
-                if (hasta)   params.append('hasta', hasta);
-
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--muted)">Cargando…</td></tr>';
-                errorEl.style.display = 'none';
-
-                try {
-                    const res = await fetch('/api/admin/logs?' + params.toString());
-                    if (res.status === 403) throw new Error('Sin permisos de administrador.');
-                    if (!res.ok) throw new Error('Error del servidor: ' + res.status);
-                    const logs = await res.json();
-
-                    counter.textContent = logs.length + ' registro(s)';
-
-                    if (logs.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--muted)">No hay registros con ese filtro.</td></tr>';
-                        return;
-                    }
-
-                    tbody.innerHTML = logs.map((log, i) => {
-                        const fecha = log.fecha_hora
-                            ? new Date(log.fecha_hora).toLocaleString('es-CO')
-                            : '—';
-                        const tipoLabel = TIPO_LABELS[log.tipo_evento] || log.tipo_evento;
-                        return `
-                            <tr style="border-bottom:1px solid var(--border)">
-                                <td style="padding:0.75rem 1rem;color:var(--muted);font-size:0.85rem">${log.id}</td>
-                                <td style="padding:0.75rem 1rem;font-size:0.85rem;white-space:nowrap">${fecha}</td>
-                                <td style="padding:0.75rem 1rem;font-size:0.85rem">${log.nombre_usuario || '—'}</td>
-                                <td style="padding:0.75rem 1rem;font-size:0.85rem">${tipoLabel}</td>
-                                <td style="padding:0.75rem 1rem;font-size:0.82rem;color:var(--muted)">${log.detalle || '—'}</td>
-                            </tr>`;
-                    }).join('');
-
-                } catch (err) {
-                    errorEl.textContent = 'No se pudo cargar el historial: ' + err.message;
-                    errorEl.style.display = 'block';
-                    tbody.innerHTML = '';
-                    counter.textContent = '';
-                }
-            }
-
-            // Cargar logs automáticamente cuando se abre la sección
-            document.addEventListener('DOMContentLoaded', () => {
-                const btn = document.querySelector('[onclick="showSection(\'auditoria\')"]');
-                if (btn) btn.addEventListener('click', cargarLogs);
-            });
-            </script>
         </section>
 
-        <!-- SECCIÓN 2: PROBLEMAS -->
-        <section id="sec-problemas" class="section active">
-            <div class="page-header">
-                <h1>Gestión de <span>Problemas</span></h1>
-                <p>Crea nuevos problemas o edita los existentes.</p>
+        <section id="sec-problemas" class="section space-y-6">
+            <div class="bg-slate-900/60 backdrop-blur-xl border border-slate-800/50 rounded-3xl p-6 sm:p-8">
+                <p class="text-xs uppercase tracking-[0.2em] text-slate-500 mb-3">Nuevo registro</p>
+                <h2 class="font-extrabold tracking-tight text-white text-3xl">Crear problema</h2>
+                <p class="mt-3 text-base text-slate-400 leading-relaxed">Completa los campos del problema y define casos públicos/privados.</p>
             </div>
 
-            <!-- TABS PARA CREAR/EDITAR -->
-            <div class="subsection-tabs">
-                <button class="tab-btn active" onclick="mostrarSubseccion('crear')">
-                    Crear problema
-                </button>
-                <button class="tab-btn" onclick="mostrarSubseccion('editar')">
-                    Editar problema
-                </button>
+            <div class="flex flex-wrap gap-3">
+                <button type="button" class="tab-btn px-4 py-2 rounded-xl border border-indigo-500/40 bg-indigo-500/10 text-white text-sm font-medium" onclick="mostrarSubseccion('crear')">Crear problema</button>
+                <button type="button" class="tab-btn px-4 py-2 rounded-xl border border-slate-700 bg-slate-900/50 text-slate-300 text-sm font-medium" onclick="mostrarSubseccion('editar')">Editar problema</button>
             </div>
 
-            <!-- SUBSECCIÓN: CREAR PROBLEMA -->
-            <div id="subsec-crear" class="subsection active">
+            <div id="subsec-crear" class="subsection active space-y-6">
 
-            <!-- INFO BÁSICA -->
-            <div class="card">
-                <div class="card-title">01 — Información básica</div>
-                <div class="form-grid">
-                    <div class="field form-full">
-                        <label>Título *</label>
-                        <input type="text" id="titulo" placeholder="Ej: Suma de dos números">
+            <div class="bg-slate-900/60 backdrop-blur-xl border border-slate-800/50 rounded-3xl p-6 sm:p-8">
+                <h3 class="text-sm uppercase tracking-[0.15em] text-indigo-300 mb-5">01 Información básica</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="sm:col-span-2">
+                        <label class="block mb-2 text-sm text-slate-300">Título *</label>
+                        <input type="text" id="titulo" placeholder="Ej: Suma de dos números" class="w-full rounded-xl border border-slate-700 bg-slate-900/50 px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                     </div>
-                    <div class="field form-full">
-                        <label>Descripción *</label>
-                        <textarea id="descripcion" rows="4" placeholder="Descripción clara del problema…"></textarea>
+                    <div class="sm:col-span-2">
+                        <label class="block mb-2 text-sm text-slate-300">Descripción *</label>
+                        <textarea id="descripcion" rows="4" placeholder="Descripción clara del problema..." class="w-full rounded-xl border border-slate-700 bg-slate-900/50 px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
                     </div>
-                    <div class="field">
-                        <label>Categoría</label>
-                        <select id="categoria_id">
-                            <option value="">— Selecciona —</option>
+                    <div>
+                        <label class="block mb-2 text-sm text-slate-300">Categoría</label>
+                        <select id="categoria_id" class="w-full rounded-xl border border-slate-700 bg-slate-900/50 px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="">- Selecciona -</option>
                         </select>
                     </div>
-                    <div class="field">
-                        <label>Dificultad</label>
-                        <select id="dificultad">
-                            <option value="">— Selecciona —</option>
+                    <div>
+                        <label class="block mb-2 text-sm text-slate-300">Dificultad</label>
+                        <select id="dificultad" class="w-full rounded-xl border border-slate-700 bg-slate-900/50 px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="">- Selecciona -</option>
                             <option value="facil">Fácil</option>
                             <option value="medio">Medio</option>
                             <option value="dificil">Difícil</option>
                         </select>
                     </div>
-                    <div class="field form-full">
-                        <label>Restricciones</label>
-                        <textarea id="restricciones" rows="3" placeholder="Ej: 1 <= n <= 10^5"></textarea>
+                    <div class="sm:col-span-2">
+                        <label class="block mb-2 text-sm text-slate-300">Restricciones</label>
+                        <textarea id="restricciones" rows="3" placeholder="Ej: 1 <= n <= 10^5" class="w-full rounded-xl border border-slate-700 bg-slate-900/50 px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
                     </div>
                 </div>
             </div>
 
-            <!-- EJEMPLOS -->
-            <div class="card">
-                <div class="card-title">02 — Ejemplo ilustrativo</div>
-                <div class="form-grid">
-                    <div class="field">
-                        <label>Entrada de ejemplo</label>
-                        <textarea id="ejemplo_entrada" rows="3" placeholder="Ej: nums = [2,7], objetivo = 9"></textarea>
+            <div class="bg-slate-900/60 backdrop-blur-xl border border-slate-800/50 rounded-3xl p-6 sm:p-8">
+                <h3 class="text-sm uppercase tracking-[0.15em] text-indigo-300 mb-5">02 Ejemplo</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block mb-2 text-sm text-slate-300">Entrada de ejemplo</label>
+                        <textarea id="ejemplo_entrada" rows="3" placeholder="Ej: nums = [2,7], objetivo = 9" class="w-full rounded-xl border border-slate-700 bg-slate-900/50 px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
                     </div>
-                    <div class="field">
-                        <label>Salida de ejemplo</label>
-                        <textarea id="ejemplo_salida" rows="3" placeholder="Ej: [0, 1]"></textarea>
-                    </div>
-                </div>
-            </div>
-
-            <!-- CÓDIGOS BASE -->
-            <div class="card">
-                <div class="card-title">03 — Código base por lenguaje</div>
-                <div class="form-grid">
-                    <div class="field form-full">
-                        <label>Código base Python</label>
-                        <textarea id="codigo_base_python" rows="4" placeholder="def solve(...):\n    pass"></textarea>
-                    </div>
-                    <div class="field form-full">
-                        <label>Código base Java</label>
-                        <textarea id="codigo_base_java" rows="4" placeholder="public class Solution {\n    public void solve() {\n    }\n}"></textarea>
-                    </div>
-                    <div class="field form-full">
-                        <label>Código base C++</label>
-                        <textarea id="codigo_base_cpp" rows="4" placeholder="#include <iostream>\nusing namespace std;"></textarea>
+                    <div>
+                        <label class="block mb-2 text-sm text-slate-300">Salida de ejemplo</label>
+                        <textarea id="ejemplo_salida" rows="3" placeholder="Ej: [0, 1]" class="w-full rounded-xl border border-slate-700 bg-slate-900/50 px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
                     </div>
                 </div>
             </div>
 
-            <!-- LÍMITES -->
-            <div class="card">
-                <div class="card-title">04 — Límites de ejecución</div>
-                <div class="form-grid">
-                    <div class="field">
-                        <label>Tiempo límite (ms)</label>
-                        <input type="number" id="limite_tiempo_ms" placeholder="Ej: 3000" min="100" max="30000">
+            <div class="bg-slate-900/60 backdrop-blur-xl border border-slate-800/50 rounded-3xl p-6 sm:p-8">
+                <h3 class="text-sm uppercase tracking-[0.15em] text-indigo-300 mb-5">03 Código base</h3>
+                <div class="grid grid-cols-1 gap-4">
+                    <div>
+                        <label class="block mb-2 text-sm text-slate-300">Código base Python</label>
+                        <textarea id="codigo_base_python" rows="4" placeholder="def solve(...):\n    pass" class="w-full rounded-xl border border-slate-700 bg-slate-900/50 px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
                     </div>
-                    <div class="field">
-                        <label>Memoria límite (MB)</label>
-                        <input type="number" id="limite_memoria_mb" placeholder="Ej: 128" min="16" max="1024">
+                    <div>
+                        <label class="block mb-2 text-sm text-slate-300">Código base Java</label>
+                        <textarea id="codigo_base_java" rows="4" placeholder="public class Solution {\n    public void solve() {\n    }\n}" class="w-full rounded-xl border border-slate-700 bg-slate-900/50 px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
                     </div>
-                    <div class="field" style="justify-content:flex-end;">
-                        <label>Estado</label>
-                        <div class="toggle-row">
-                            <label class="toggle">
-                                <input type="checkbox" id="esta_activo" checked>
-                                <span class="slider"></span>
-                            </label>
-                            <span class="toggle-label" id="toggle-label-text">Activo</span>
-                        </div>
+                    <div>
+                        <label class="block mb-2 text-sm text-slate-300">Código base C++</label>
+                        <textarea id="codigo_base_cpp" rows="4" placeholder="#include <iostream>\nusing namespace std;" class="w-full rounded-xl border border-slate-700 bg-slate-900/50 px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
                     </div>
                 </div>
             </div>
 
-            <!-- CASOS DE PRUEBA -->
-            <div class="card">
-                <div class="card-title">05 — Casos de prueba</div>
-                <div class="casos-list" id="casos-list"></div>
-                <button class="btn-add" onclick="agregarCaso()">
-                    + Agregar caso de prueba
-                </button>
+            <div class="bg-slate-900/60 backdrop-blur-xl border border-slate-800/50 rounded-3xl p-6 sm:p-8">
+                <h3 class="text-sm uppercase tracking-[0.15em] text-indigo-300 mb-5">04 Límites</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block mb-2 text-sm text-slate-300">Tiempo límite (ms)</label>
+                        <input type="number" id="limite_tiempo_ms" placeholder="3000" min="100" max="30000" class="w-full rounded-xl border border-slate-700 bg-slate-900/50 px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block mb-2 text-sm text-slate-300">Memoria límite (MB)</label>
+                        <input type="number" id="limite_memoria_mb" placeholder="128" min="16" max="1024" class="w-full rounded-xl border border-slate-700 bg-slate-900/50 px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block mb-2 text-sm text-slate-300">Estado</label>
+                        <label class="inline-flex items-center gap-3 mt-2 cursor-pointer">
+                            <input type="checkbox" id="esta_activo" checked class="peer sr-only">
+                            <span class="relative h-6 w-11 rounded-full bg-slate-700 peer-checked:bg-emerald-500/40 transition-colors after:absolute after:top-0.5 after:left-0.5 after:h-5 after:w-5 after:rounded-full after:bg-slate-300 peer-checked:after:translate-x-5 after:transition-transform"></span>
+                            <span id="toggle-label-text" class="text-slate-200 text-sm font-medium">Activo</span>
+                        </label>
+                    </div>
+                </div>
             </div>
 
-            <!-- ACTIONS -->
-            <div class="actions-bar">
-                <button class="btn btn-ghost" onclick="limpiarForm()">Cancelar</button>
-                <button class="btn btn-primary" id="btn-guardar" onclick="guardarProblema()">
-                    Guardar problema
-                </button>
+            <div class="bg-slate-900/60 backdrop-blur-xl border border-slate-800/50 rounded-3xl p-6 sm:p-8">
+                <h3 class="text-sm uppercase tracking-[0.15em] text-indigo-300 mb-5">05 Casos de prueba</h3>
+                <div class="space-y-4" id="casos-list"></div>
+                <button class="mt-4 w-full rounded-xl border border-dashed border-slate-700 px-4 py-3 text-slate-300 hover:text-white hover:border-indigo-500/60 hover:bg-indigo-500/10 transition-all" onclick="agregarCaso()">+ Agregar caso de prueba</button>
             </div>
             </div>
 
@@ -303,14 +193,515 @@
                 <div id="lista-problemas-editar"></div>
             </div>
 
+            <div class="flex flex-wrap justify-end gap-3">
+                <button class="px-6 py-3 rounded-xl border border-slate-700 bg-slate-900/50 text-slate-300 hover:bg-slate-800 transition-all" onclick="limpiarForm()">Cancelar</button>
+                <button class="px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-cyan-500 text-white font-medium transition-all duration-300 transform hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(99,102,241,0.3)] disabled:opacity-60 disabled:cursor-not-allowed" id="btn-guardar" onclick="guardarProblema()">Guardar problema</button>
+            </div>
+            </div>
+
+            <div id="subsec-editar" class="subsection hidden bg-slate-900/60 backdrop-blur-xl border border-slate-800/50 rounded-3xl p-6 sm:p-8">
+                <div class="flex items-center justify-between gap-3 mb-5">
+                    <div>
+                        <p class="text-xs uppercase tracking-[0.2em] text-slate-500">Editar</p>
+                        <h3 class="mt-2 text-2xl font-extrabold tracking-tight text-white">Problemas existentes</h3>
+                    </div>
+                    <button type="button" class="px-4 py-2 rounded-xl border border-slate-700 bg-slate-900/50 text-slate-300 text-sm font-medium hover:bg-slate-800 transition-all" onclick="cargarListaProblemas()">Actualizar lista</button>
+                </div>
+                <div id="lista-problemas-editar"></div>
+            </div>
         </section>
     </main>
-</div>
+</section>
 
-<div id="toast"></div>
+<div id="toast" class="fixed bottom-6 right-6 hidden rounded-xl px-5 py-3 text-sm font-semibold shadow-2xl z-50"></div>
 
+<script>
+    function escapeHtml(str) {
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+    }
 
-<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+    function showSection(id, clicked) {
+        document.querySelectorAll('.section').forEach((s) => s.classList.add('hidden'));
+        document.querySelectorAll('.nav-item').forEach((n) => {
+            n.classList.remove('active', 'text-white', 'border-indigo-500/40', 'bg-indigo-500/10');
+            n.classList.add('text-slate-300', 'border-slate-800', 'bg-slate-900/50');
+        });
 
-</body>
-</html>
+        document.getElementById('sec-' + id).classList.remove('hidden');
+
+        if (clicked) {
+            clicked.classList.add('active', 'text-white', 'border-indigo-500/40', 'bg-indigo-500/10');
+            clicked.classList.remove('text-slate-300', 'border-slate-800', 'bg-slate-900/50');
+        }
+    }
+
+    function mostrarSubseccion(id) {
+        document.querySelectorAll('.subsection').forEach((s) => s.classList.add('hidden'));
+        document.querySelectorAll('.tab-btn').forEach((b) => {
+            b.classList.remove('border-indigo-500/40', 'bg-indigo-500/10', 'text-white');
+            b.classList.add('border-slate-700', 'bg-slate-900/50', 'text-slate-300');
+        });
+
+        document.getElementById('subsec-' + id).classList.remove('hidden');
+
+        const buttons = document.querySelectorAll('.tab-btn');
+        buttons.forEach((btn, index) => {
+            if ((index === 0 && id === 'crear') || (index === 1 && id === 'editar')) {
+                btn.classList.add('border-indigo-500/40', 'bg-indigo-500/10', 'text-white');
+                btn.classList.remove('border-slate-700', 'bg-slate-900/50', 'text-slate-300');
+            }
+        });
+
+        if (id === 'editar') {
+            cargarListaProblemas();
+        }
+    }
+
+    // ── AUDITORÍA - CARGAR LOGS ──
+    const TIPO_LABELS = {
+        inicio_sesion:     '🔑 Inicio de sesión',
+        cierre_sesion:     '🚪 Cierre de sesión',
+        registro:          '📝 Registro',
+        envio_solucion:    '📤 Envío de solución',
+        creacion_problema: '➕ Creación de problema',
+    };
+
+    async function cargarLogs() {
+        const tbody   = document.getElementById('logs-tbody');
+        const errorEl = document.getElementById('logs-error');
+        const counter = document.getElementById('logs-contador');
+
+        const usuario = document.getElementById('filtro-usuario').value;
+        const tipo    = document.getElementById('filtro-tipo').value;
+        const desde   = document.getElementById('filtro-desde').value;
+        const hasta   = document.getElementById('filtro-hasta').value;
+
+        const params = new URLSearchParams();
+        if (usuario) params.append('usuario', usuario);
+        if (tipo)    params.append('tipo', tipo);
+        if (desde)   params.append('desde', desde);
+        if (hasta)   params.append('hasta', hasta);
+
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--muted)">Cargando…</td></tr>';
+        errorEl.style.display = 'none';
+
+        try {
+            const res = await fetch('/api/admin/logs?' + params.toString());
+            if (res.status === 403) throw new Error('Sin permisos de administrador.');
+            if (!res.ok) throw new Error('Error del servidor: ' + res.status);
+            const logs = await res.json();
+
+            counter.textContent = logs.length + ' registro(s)';
+
+            if (logs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--muted)">No hay registros con ese filtro.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = logs.map((log, i) => {
+                const fecha = log.fecha_hora
+                    ? new Date(log.fecha_hora).toLocaleString('es-CO')
+                    : '—';
+                const tipoLabel = TIPO_LABELS[log.tipo_evento] || log.tipo_evento;
+                return `
+                    <tr style="border-bottom:1px solid var(--border)">
+                        <td style="padding:0.75rem 1rem;color:var(--muted);font-size:0.85rem">${log.id}</td>
+                        <td style="padding:0.75rem 1rem;font-size:0.85rem;white-space:nowrap">${fecha}</td>
+                        <td style="padding:0.75rem 1rem;font-size:0.85rem">${log.nombre_usuario || '—'}</td>
+                        <td style="padding:0.75rem 1rem;font-size:0.85rem">${tipoLabel}</td>
+                        <td style="padding:0.75rem 1rem;font-size:0.82rem;color:var(--muted)">${log.detalle || '—'}</td>
+                    </tr>`;
+            }).join('');
+
+        } catch (err) {
+            errorEl.textContent = 'No se pudo cargar el historial: ' + err.message;
+            errorEl.style.display = 'block';
+            tbody.innerHTML = '';
+            counter.textContent = '';
+        }
+    }
+
+    // Cargar logs automáticamente cuando se abre la sección
+    document.addEventListener('DOMContentLoaded', () => {
+        const btn = document.querySelector('[onclick="showSection(\'auditoria\', this)"]');
+        if (btn) btn.addEventListener('click', cargarLogs);
+    });
+
+    document.getElementById('esta_activo').addEventListener('change', function () {
+        document.getElementById('toggle-label-text').textContent = this.checked ? 'Activo' : 'Inactivo';
+    });
+
+    async function cargarCategorias() {
+        try {
+            const res = await fetch('/api/categories');
+            if (!res.ok) return;
+            const data = await res.json();
+            const sel = document.getElementById('categoria_id');
+            (data.categorias || data).forEach((cat) => {
+                const opt = document.createElement('option');
+                opt.value = cat.id;
+                opt.textContent = cat.nombre;
+                sel.appendChild(opt);
+            });
+        } catch (_) {}
+    }
+
+    cargarCategorias();
+
+    let problemaEnEdicion = null;
+
+    let casosCount = 0;
+
+    function renderListaVacia(mensaje) {
+        return `<p class="text-center text-slate-500 py-10">${mensaje}</p>`;
+    }
+
+    async function cargarListaProblemas() {
+        const contenedor = document.getElementById('lista-problemas-editar');
+        contenedor.innerHTML = renderListaVacia('Cargando problemas...');
+
+        try {
+            const res = await fetch('/api/problems');
+            if (!res.ok) throw new Error('Error al cargar problemas');
+            const problemas = await res.json();
+
+            if (!problemas.length) {
+                contenedor.innerHTML = renderListaVacia('No hay problemas para editar.');
+                return;
+            }
+
+            let html = `
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-left">
+                        <thead>
+                            <tr class="border-b border-slate-800/80">
+                                <th class="px-4 py-3 text-xs uppercase tracking-widest text-slate-500">Título</th>
+                                <th class="px-4 py-3 text-xs uppercase tracking-widest text-slate-500">Categoría</th>
+                                <th class="px-4 py-3 text-xs uppercase tracking-widest text-slate-500">Dificultad</th>
+                                <th class="px-4 py-3 text-xs uppercase tracking-widest text-slate-500">Estado</th>
+                                <th class="px-4 py-3 text-xs uppercase tracking-widest text-slate-500">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            problemas.forEach((p) => {
+                const badgeClass = 'inline-flex items-center px-3 py-1 rounded-full text-xs border ' +
+                    (p.dificultad === 'facil'
+                        ? 'border-green-600/30 bg-green-500/10 text-green-400'
+                        : p.dificultad === 'medio'
+                            ? 'border-amber-600/30 bg-amber-500/10 text-amber-400'
+                            : p.dificultad === 'dificil'
+                                ? 'border-red-600/30 bg-red-500/10 text-red-400'
+                                : 'border-slate-600/30 bg-slate-700/20 text-slate-300');
+                const estadoClass = p.esta_activo
+                    ? 'inline-flex items-center px-3 py-1 rounded-full text-xs border border-emerald-600/30 bg-emerald-500/10 text-emerald-400'
+                    : 'inline-flex items-center px-3 py-1 rounded-full text-xs border border-slate-600/30 bg-slate-700/30 text-slate-400';
+                const dificultadLabel = p.dificultad ? p.dificultad.charAt(0).toUpperCase() + p.dificultad.slice(1) : '—';
+                const estadoLabel = p.esta_activo ? 'Activo' : 'Inactivo';
+
+                html += `
+                    <tr class="border-b border-slate-800/60 hover:bg-slate-800/30 transition-colors">
+                        <td class="px-4 py-4 text-slate-100 font-medium">${escapeHtml(p.titulo)}</td>
+                        <td class="px-4 py-4 text-slate-300">${escapeHtml(p.categoria || '—')}</td>
+                        <td class="px-4 py-4"><span class="${badgeClass}">${dificultadLabel}</span></td>
+                        <td class="px-4 py-4"><span class="${estadoClass}">${estadoLabel}</span></td>
+                        <td class="px-4 py-4">
+                            <div class="flex flex-wrap gap-2">
+                                <button type="button" class="px-3 py-2 rounded-lg border border-indigo-500/40 bg-indigo-500/10 text-indigo-200 text-sm" onclick="editarProblema('${p.id}')">Editar</button>
+                                <button type="button" class="px-3 py-2 rounded-lg border border-red-500/40 bg-red-500/10 text-red-200 text-sm" onclick="eliminarProblema('${p.id}', '${escapeHtml(p.titulo).replace(/'/g, "\\'")}')">Eliminar</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += `</tbody></table></div>`;
+            contenedor.innerHTML = html;
+        } catch (err) {
+            contenedor.innerHTML = renderListaVacia('Error al cargar problemas: ' + err.message);
+        }
+    }
+
+    async function editarProblema(id) {
+        try {
+            const res = await fetch(`/api/problems/${id}`);
+            if (!res.ok) throw new Error('Problema no encontrado');
+            const problema = await res.json();
+
+            document.getElementById('titulo').value = problema.titulo || '';
+            document.getElementById('descripcion').value = problema.descripcion || '';
+            document.getElementById('categoria_id').value = problema.categoria_id || '';
+            document.getElementById('dificultad').value = problema.dificultad || '';
+            document.getElementById('restricciones').value = problema.restricciones || '';
+            document.getElementById('ejemplo_entrada').value = problema.ejemplo_entrada || '';
+            document.getElementById('ejemplo_salida').value = problema.ejemplo_salida || '';
+            document.getElementById('limite_tiempo_ms').value = problema.limite_tiempo_ms || '';
+            document.getElementById('limite_memoria_mb').value = problema.limite_memoria_mb || '';
+            document.getElementById('esta_activo').checked = !!problema.esta_activo;
+            document.getElementById('toggle-label-text').textContent = problema.esta_activo ? 'Activo' : 'Inactivo';
+
+            document.getElementById('casos-list').innerHTML = '';
+            casosCount = 0;
+            (problema.casos_prueba || []).forEach((caso) => {
+                agregarCasoConDatos(caso);
+            });
+
+            problemaEnEdicion = id;
+            document.getElementById('btn-guardar').textContent = 'Actualizar problema';
+            mostrarSubseccion('crear');
+            toast('Problema cargado para edición', 'ok');
+        } catch (e) {
+            toast('Error al cargar el problema: ' + e.message, 'err');
+        }
+    }
+
+    function agregarCasoConDatos(casoData) {
+        casosCount += 1;
+        const n = casosCount;
+        const lista = document.getElementById('casos-list');
+
+        const div = document.createElement('div');
+        div.className = 'caso-item rounded-2xl border border-slate-800 bg-slate-950/40 p-4';
+        div.id = `caso-${n}`;
+
+        const isPublico = casoData.es_publico ? 'pub' : 'priv';
+        const badgeText = casoData.es_publico ? 'PÚBLICO' : 'PRIVADO';
+
+        div.innerHTML = `
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                <span class="text-xs uppercase tracking-[0.15em] text-indigo-300">Caso #${n}</span>
+                <div class="flex items-center gap-2">
+                    <button class="badge-publico ${isPublico} rounded-full px-3 py-1 text-xs font-semibold bg-emerald-500/10 text-emerald-300 border border-emerald-600/40" onclick="togglePublico(this)" title="Click para cambiar visibilidad">${badgeText}</button>
+                    <button class="btn-remove-caso rounded-lg px-3 py-1 text-xs font-semibold bg-red-500/10 text-red-300 border border-red-600/40" onclick="eliminarCaso(${n})">Eliminar</button>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                    <label class="block mb-2 text-sm text-slate-300">Descripción</label>
+                    <input type="text" placeholder="Ej: Caso básico" data-caso="${n}" data-field="descripcion" value="${escapeHtml(casoData.descripcion || '')}" class="w-full rounded-xl border border-slate-700 bg-slate-900/50 px-3 py-2 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block mb-2 text-sm text-slate-300">Entrada *</label>
+                    <textarea rows="2" placeholder="Valor de stdin" data-caso="${n}" data-field="entrada" class="w-full rounded-xl border border-slate-700 bg-slate-900/50 px-3 py-2 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(casoData.entrada || '')}</textarea>
+                </div>
+                <div>
+                    <label class="block mb-2 text-sm text-slate-300">Salida esperada *</label>
+                    <textarea rows="2" placeholder="Salida exacta esperada" data-caso="${n}" data-field="salida_esperada" class="w-full rounded-xl border border-slate-700 bg-slate-900/50 px-3 py-2 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">${escapeHtml(casoData.salida_esperada || '')}</textarea>
+                </div>
+            </div>
+        `;
+        lista.appendChild(div);
+    }
+
+    async function eliminarProblema(id, titulo) {
+        if (!confirm(`¿Estás seguro de que deseas eliminar el problema "${titulo}"? Esta acción no se puede deshacer.`)) {
+            return;
+        }
+
+        try {
+            const res = await fetch(`/api/problems/${id}`, {
+                method: 'DELETE',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                toast(data.error || 'Error al eliminar', 'err');
+                return;
+            }
+
+            toast('✓ Problema eliminado correctamente', 'ok');
+            cargarListaProblemas();
+        } catch (e) {
+            toast('No se pudo conectar con el servidor', 'err');
+        }
+    }
+
+    function agregarCaso() {
+        casosCount += 1;
+        const n = casosCount;
+        const lista = document.getElementById('casos-list');
+
+        const div = document.createElement('div');
+        div.className = 'caso-item rounded-2xl border border-slate-800 bg-slate-950/40 p-4';
+        div.id = `caso-${n}`;
+        div.innerHTML = `
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                <span class="text-xs uppercase tracking-[0.15em] text-indigo-300">Caso #${n}</span>
+                <div class="flex items-center gap-2">
+                    <button class="badge-publico pub rounded-full px-3 py-1 text-xs font-semibold bg-emerald-500/10 text-emerald-300 border border-emerald-600/40" onclick="togglePublico(this)" title="Click para cambiar visibilidad">PÚBLICO</button>
+                    <button class="btn-remove-caso rounded-lg px-3 py-1 text-xs font-semibold bg-red-500/10 text-red-300 border border-red-600/40" onclick="eliminarCaso(${n})">Eliminar</button>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                    <label class="block mb-2 text-sm text-slate-300">Descripción</label>
+                    <input type="text" placeholder="Ej: Caso básico" data-caso="${n}" data-field="descripcion" class="w-full rounded-xl border border-slate-700 bg-slate-900/50 px-3 py-2 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block mb-2 text-sm text-slate-300">Entrada *</label>
+                    <textarea rows="2" placeholder="Valor de stdin" data-caso="${n}" data-field="entrada" class="w-full rounded-xl border border-slate-700 bg-slate-900/50 px-3 py-2 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                </div>
+                <div>
+                    <label class="block mb-2 text-sm text-slate-300">Salida esperada *</label>
+                    <textarea rows="2" placeholder="Salida exacta esperada" data-caso="${n}" data-field="salida_esperada" class="w-full rounded-xl border border-slate-700 bg-slate-900/50 px-3 py-2 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                </div>
+            </div>`;
+
+        lista.appendChild(div);
+        div.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function togglePublico(btn) {
+        const esPublico = btn.classList.contains('pub');
+        btn.classList.toggle('pub', !esPublico);
+        btn.classList.toggle('priv', esPublico);
+
+        if (esPublico) {
+            btn.textContent = 'PRIVADO';
+            btn.classList.remove('bg-emerald-500/10', 'text-emerald-300', 'border-emerald-600/40');
+            btn.classList.add('bg-slate-700/30', 'text-slate-300', 'border-slate-600/50');
+        } else {
+            btn.textContent = 'PÚBLICO';
+            btn.classList.add('bg-emerald-500/10', 'text-emerald-300', 'border-emerald-600/40');
+            btn.classList.remove('bg-slate-700/30', 'text-slate-300', 'border-slate-600/50');
+        }
+    }
+
+    function eliminarCaso(n) {
+        const el = document.getElementById(`caso-${n}`);
+        if (el) el.remove();
+    }
+
+    function leerCasos() {
+        const casos = [];
+        document.querySelectorAll('.caso-item').forEach((item, idx) => {
+            const n = item.id.replace('caso-', '');
+            const get = (field) => {
+                const el = item.querySelector(`[data-caso="${n}"][data-field="${field}"]`);
+                return el ? el.value.trim() : '';
+            };
+            const badge = item.querySelector('.badge-publico');
+            casos.push({
+                descripcion: get('descripcion'),
+                entrada: get('entrada'),
+                salida_esperada: get('salida_esperada'),
+                es_publico: badge ? badge.classList.contains('pub') : true,
+                orden: idx + 1
+            });
+        });
+        return casos;
+    }
+
+    async function guardarProblema() {
+        const titulo = document.getElementById('titulo').value.trim();
+        const descripcion = document.getElementById('descripcion').value.trim();
+
+        if (!titulo) {
+            toast('El título es obligatorio', 'err');
+            return;
+        }
+
+        if (!descripcion) {
+            toast('La descripción es obligatoria', 'err');
+            return;
+        }
+
+        const casos = leerCasos();
+        for (let i = 0; i < casos.length; i += 1) {
+            if (!casos[i].entrada || !casos[i].salida_esperada) {
+                toast(`El caso #${i + 1} necesita entrada y salida esperada`, 'err');
+                return;
+            }
+        }
+
+        const payload = {
+            titulo,
+            descripcion,
+            categoria_id: document.getElementById('categoria_id').value || null,
+            dificultad: document.getElementById('dificultad').value || null,
+            restricciones: document.getElementById('restricciones').value.trim() || null,
+            ejemplo_entrada: document.getElementById('ejemplo_entrada').value.trim() || null,
+            ejemplo_salida: document.getElementById('ejemplo_salida').value.trim() || null,
+            codigo_base_python: document.getElementById('codigo_base_python').value.trim() || null,
+            codigo_base_java: document.getElementById('codigo_base_java').value.trim() || null,
+            codigo_base_cpp: document.getElementById('codigo_base_cpp').value.trim() || null,
+            limite_tiempo_ms: parseInt(document.getElementById('limite_tiempo_ms').value, 10) || null,
+            limite_memoria_mb: parseInt(document.getElementById('limite_memoria_mb').value, 10) || null,
+            esta_activo: document.getElementById('esta_activo').checked,
+            casos_prueba: casos
+        };
+
+        const btn = document.getElementById('btn-guardar');
+        btn.disabled = true;
+        btn.textContent = problemaEnEdicion ? 'Actualizando...' : 'Guardando...';
+
+        try {
+            const isEditing = problemaEnEdicion !== null;
+            const endpoint = isEditing ? `/api/problems/${problemaEnEdicion}` : '/api/problems/crear';
+            const method = isEditing ? 'PUT' : 'POST';
+
+            const res = await fetch(endpoint, {
+                method,
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                toast(data.error || 'Error al guardar', 'err');
+                return;
+            }
+
+            toast('Problema guardado correctamente', 'ok');
+            limpiarForm();
+            cargarListaProblemas();
+        } catch (e) {
+            toast('No se pudo conectar con el servidor', 'err');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Guardar problema';
+        }
+    }
+
+    function limpiarForm() {
+        ['titulo', 'descripcion', 'restricciones', 'ejemplo_entrada', 'ejemplo_salida', 'codigo_base_python', 'codigo_base_java', 'codigo_base_cpp'].forEach((id) => {
+            document.getElementById(id).value = '';
+        });
+        document.getElementById('categoria_id').value = '';
+        document.getElementById('dificultad').value = '';
+        document.getElementById('limite_tiempo_ms').value = '';
+        document.getElementById('limite_memoria_mb').value = '';
+        document.getElementById('esta_activo').checked = true;
+        document.getElementById('toggle-label-text').textContent = 'Activo';
+        document.getElementById('casos-list').innerHTML = '';
+        casosCount = 0;
+        problemaEnEdicion = null;
+        document.getElementById('btn-guardar').textContent = 'Guardar problema';
+    }
+
+    function toast(msg, type = 'ok') {
+        const el = document.getElementById('toast');
+        el.textContent = msg;
+        el.classList.remove('hidden', 'bg-emerald-950/80', 'border-emerald-500/70', 'text-emerald-300', 'bg-red-950/80', 'border-red-500/70', 'text-red-300');
+        el.classList.add('border');
+
+        if (type === 'err') {
+            el.classList.add('bg-red-950/80', 'border-red-500/70', 'text-red-300');
+        } else {
+            el.classList.add('bg-emerald-950/80', 'border-emerald-500/70', 'text-emerald-300');
+        }
+
+        clearTimeout(el._t);
+        el._t = setTimeout(() => {
+            el.classList.add('hidden');
+        }, 3000);
+    }
+</script>
+{% endblock %}
