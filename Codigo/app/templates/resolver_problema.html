@@ -1,76 +1,377 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Resolver problema</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/resolver_problema.css') }}">
+{% extends "base.html" %}
 
-</head>
-<body>
+{% block title %}Resolver Problema - CodeChallenge{% endblock %}
 
-<h2 id="titulo-problema">Cargando…</h2>
-<div id="meta" style="color:gray; font-size:14px"></div>
-<hr>
-
-<div class="contenedor">
-
-    <div class="panel-problema">
-        <div id="descripcion">Cargando descripción…</div>
-
-        <hr>
+{% block content %}
+<section class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-8">
+    <aside class="md:col-span-5 bg-slate-900/60 backdrop-blur-xl border border-slate-800/50 rounded-3xl p-6 sm:p-8 space-y-6 max-h-[78vh] overflow-y-auto">
         <div>
-            <strong>Categoría:</strong> <span id="categoria">—</span><br>
-            <strong>Dificultad:</strong> <span id="dificultad">—</span>
+            <h1 id="titulo-problema" class="font-extrabold tracking-tight text-white text-3xl md:text-4xl">Cargando...</h1>
+            <p id="meta" class="mt-3 text-sm text-slate-500"></p>
         </div>
 
-        <hr>
         <div>
-            <strong>Restricciones:</strong>
-            <pre id="restricciones" style="background:#f8f8f8; padding:8px;">—</pre>
+            <h2 class="text-slate-300 text-sm uppercase tracking-[0.15em] mb-2">Descripción</h2>
+            <div id="descripcion" class="text-base text-slate-300 leading-relaxed"></div>
         </div>
 
-        <hr>
-        <div>
-            <strong>Ejemplo - Entrada:</strong>
-            <pre id="ejemplo_entrada" style="background:#f0f0f0; padding:8px;">—</pre>
-            <strong>Ejemplo - Salida:</strong>
-            <pre id="ejemplo_salida" style="background:#f0f0f0; padding:8px;">—</pre>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="rounded-2xl border border-slate-800 bg-slate-950/40 p-4">
+                <h3 class="text-xs uppercase tracking-[0.15em] text-slate-500">Categoría</h3>
+                <p id="categoria" class="mt-2 text-slate-200">-</p>
+            </div>
+            <div class="rounded-2xl border border-slate-800 bg-slate-950/40 p-4">
+                <h3 class="text-xs uppercase tracking-[0.15em] text-slate-500">Dificultad</h3>
+                <p id="dificultad" class="mt-2 text-slate-200">-</p>
+            </div>
         </div>
 
-        <div class="casos-prueba">
-            <strong>Casos de prueba públicos:</strong>
-            <div id="casos-prueba-lista" style="margin-top:8px; color:#666;">Cargando casos…</div>
+        <div class="rounded-2xl border border-slate-800 bg-slate-950/40 p-4">
+            <h3 class="text-xs uppercase tracking-[0.15em] text-slate-500">Restricciones</h3>
+            <pre id="restricciones" class="mt-2 text-sm text-slate-300 whitespace-pre-wrap font-mono">-</pre>
         </div>
-    </div>
 
-    <div class="panel-editor">
-        <div style="flex-shrink:0;">
-            <select id="selector-lenguaje">
+        <div class="grid grid-cols-1 gap-4">
+            <div class="rounded-2xl border border-slate-800 bg-slate-950/40 p-4">
+                <h3 class="text-xs uppercase tracking-[0.15em] text-slate-500">Ejemplo Entrada</h3>
+                <pre id="ejemplo_entrada" class="mt-2 text-sm text-slate-300 whitespace-pre-wrap font-mono">-</pre>
+            </div>
+            <div class="rounded-2xl border border-slate-800 bg-slate-950/40 p-4">
+                <h3 class="text-xs uppercase tracking-[0.15em] text-slate-500">Ejemplo Salida</h3>
+                <pre id="ejemplo_salida" class="mt-2 text-sm text-slate-300 whitespace-pre-wrap font-mono">-</pre>
+            </div>
+        </div>
+
+        <div class="pt-4 border-t border-slate-800">
+            <h3 class="text-sm uppercase tracking-[0.15em] text-slate-500 mb-3">Casos públicos</h3>
+            <div id="casos-prueba-lista" class="space-y-3 text-slate-400">Cargando casos...</div>
+        </div>
+    </aside>
+
+    <section class="md:col-span-7 flex flex-col gap-4 min-h-[78vh]">
+        <div class="bg-slate-900/60 backdrop-blur-xl border border-slate-800/50 rounded-3xl p-4 sm:p-5 flex items-center justify-between">
+            <div>
+                <h2 class="text-white font-semibold">Editor</h2>
+                <p class="text-sm text-slate-400">Prueba tu solución antes de enviarla.</p>
+            </div>
+            <select id="selector-lenguaje" class="rounded-xl border border-slate-700 bg-slate-900/50 px-4 py-2 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 <option value="python">Python</option>
                 <option value="java">Java</option>
                 <option value="cpp">C++</option>
             </select>
-            <button onclick="probar()" id="btn-probar">🧪 Probar previo a envío</button>
-            <button onclick="ejecutar()" id="btn-ejecutar">▶ Guardar envío</button>
         </div>
 
-        <div id="estado-ejecucion"></div>
+        <div class="flex-1 bg-slate-900/60 backdrop-blur-xl border border-slate-800/50 rounded-3xl p-4 sm:p-5 flex flex-col gap-4">
+            <textarea id="editor" class="flex-1 min-h-[280px] w-full rounded-2xl border border-slate-800 bg-slate-950/70 p-4 font-mono text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Escribe tu solución aquí..."></textarea>
 
-        <textarea id="editor" placeholder="Escribe tu solución aquí..."></textarea>
+            <div id="estado-ejecucion" class="min-h-6 text-sm font-semibold text-slate-400"></div>
 
-        <div class="resultado-wrapper">
-            <strong>Resultado:</strong>
-            <div id="resultado">Ejecuta tu código para ver el resultado.</div>
+            <div class="rounded-2xl border border-slate-800 bg-slate-950/70 p-4">
+                <h3 class="text-sm uppercase tracking-[0.15em] text-slate-500 mb-3">Resultado</h3>
+                <div id="resultado" class="text-sm text-slate-300 whitespace-pre-wrap">Ejecuta tu código para ver el resultado.</div>
+            </div>
+
+            <div class="flex flex-wrap gap-3 justify-end">
+                <button onclick="probar()" id="btn-probar" class="border border-slate-700 bg-slate-900/50 text-slate-300 hover:bg-slate-800 px-6 py-3 rounded-xl transition-all duration-300 transform hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(99,102,241,0.3)]">Probar previo a envío</button>
+                <button onclick="ejecutar()" id="btn-ejecutar" class="bg-gradient-to-r from-indigo-500 to-cyan-500 text-white font-medium px-6 py-3 rounded-xl transition-all duration-300 transform hover:-translate-y-1 hover:shadow-[0_0_30px_rgba(99,102,241,0.3)]">Guardar envío</button>
+                <button onclick="enviarIntento()" id="btn-enviar" style="display:none" class="bg-gradient-to-r from-emerald-500 to-cyan-500 text-white font-medium px-6 py-3 rounded-xl transition-all duration-300 transform hover:-translate-y-1">Enviar intento</button>
+            </div>
         </div>
-    </div>
-
-</div>
+    </section>
+</section>
 
 
 <script>
-    window.PROBLEMA_ID = {{ problema_id | tojson }};
-</script>
-<script src="{{ url_for('static', filename='js/resolver_problema.js') }}"></script>
+    const PROBLEMA_ID = {{ problema_id | tojson }};
 
-</body>
-</html>
+    let codigoBasePorLenguaje = {};
+    let codigoBaseActual = null;
+
+    window.addEventListener('DOMContentLoaded', () => {
+        cargarProblema();
+        cargarCasosPrueba();
+        const selector = document.getElementById('selector-lenguaje');
+        selector.addEventListener('change', () => {
+            aplicarCodigoBase(selector.value);
+        });
+    });
+
+    function setStatus(type, text) {
+        const estadoDiv = document.getElementById('estado-ejecucion');
+        estadoDiv.textContent = text;
+        estadoDiv.className = 'min-h-6 text-sm font-semibold ' + (type || 'text-slate-400');
+    }
+
+    function setResult(type, text, isHtml = false) {
+        const resultadoDiv = document.getElementById('resultado');
+        resultadoDiv.className = 'text-sm whitespace-pre-wrap ' + (type || 'text-slate-300');
+        if (isHtml) {
+            resultadoDiv.innerHTML = text;
+        } else {
+            resultadoDiv.textContent = text;
+        }
+    }
+
+    function aplicarCodigoBase(lenguaje) {
+        const editor = document.getElementById('editor');
+        const nuevoCodigo = codigoBasePorLenguaje[lenguaje] || '';
+
+        if (!editor) return;
+
+        if (!editor.value.trim() || editor.value === codigoBaseActual) {
+            editor.value = nuevoCodigo;
+            codigoBaseActual = nuevoCodigo;
+        }
+    }
+
+    async function cargarProblema() {
+        try {
+            const res = await fetch('/api/problems/' + encodeURIComponent(PROBLEMA_ID));
+            if (!res.ok) throw new Error('No se pudo obtener el problema');
+            const p = await res.json();
+
+            document.getElementById('titulo-problema').textContent = p.titulo || 'Sin título';
+            document.getElementById('descripcion').innerHTML = p.descripcion || '';
+            document.getElementById('categoria').textContent = p.categoria || '-';
+            document.getElementById('dificultad').textContent = p.dificultad || '-';
+            document.getElementById('restricciones').textContent = p.restricciones || '-';
+            document.getElementById('ejemplo_entrada').textContent = p.ejemplo_entrada || '-';
+            document.getElementById('ejemplo_salida').textContent = p.ejemplo_salida || '-';
+            document.getElementById('meta').textContent = 'ID: ' + (p.id || '-') + ' · Tiempo límite: ' + (p.limite_tiempo_ms || '-') + 'ms';
+
+            codigoBasePorLenguaje = {
+                python: p.codigo_base_python || '',
+                java: p.codigo_base_java || '',
+                cpp: p.codigo_base_cpp || ''
+            };
+
+            aplicarCodigoBase(document.getElementById('selector-lenguaje').value);
+        } catch (err) {
+            document.getElementById('titulo-problema').textContent = 'No se encontró el problema';
+            document.getElementById('descripcion').textContent = '';
+        }
+    }
+
+    async function cargarCasosPrueba() {
+        const contenedor = document.getElementById('casos-prueba-lista');
+        try {
+            const res = await fetch('/api/problems/' + encodeURIComponent(PROBLEMA_ID) + '/test-cases');
+            if (!res.ok) throw new Error('No se pudieron cargar los casos');
+            const data = await res.json();
+            const casos = data.casos || [];
+
+            if (!casos.length) {
+                contenedor.textContent = 'No hay casos de prueba públicos para este problema.';
+                return;
+            }
+
+            contenedor.innerHTML = casos.map((caso) => `
+                <article class="rounded-xl border border-slate-800 bg-slate-950/50 p-4">
+                    <h4 class="font-semibold text-slate-200">${caso.descripcion || ('Caso ' + caso.orden)}</h4>
+                    <p class="mt-2 text-xs uppercase tracking-[0.12em] text-slate-500">Entrada</p>
+                    <pre class="mt-1 text-sm text-slate-300 font-mono whitespace-pre-wrap">${caso.entrada || '-'}</pre>
+                    <p class="mt-3 text-xs uppercase tracking-[0.12em] text-slate-500">Salida esperada</p>
+                    <pre class="mt-1 text-sm text-slate-300 font-mono whitespace-pre-wrap">${caso.salida_esperada || '-'}</pre>
+                </article>
+            `).join('');
+        } catch (err) {
+            contenedor.textContent = 'No se pudieron cargar los casos de prueba.';
+        }
+    }
+
+    async function probar() {
+        const codigo = document.getElementById('editor').value;
+        const lenguaje = document.getElementById('selector-lenguaje').value;
+        const btn = document.getElementById('btn-probar');
+
+        if (!codigo.trim()) {
+            setResult('text-amber-400', 'Escribe algún código antes de probar.');
+            return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = 'Probando...';
+        setStatus('text-amber-400', 'Ejecutando contra casos de prueba...');
+        setResult('text-slate-300', '');
+
+        try {
+            const response = await fetch('/api/submissions/preview', {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ problema_id: PROBLEMA_ID, language: lenguaje, source_code: codigo })
+            });
+
+            const resultado = await response.json();
+            if (!response.ok) {
+                setStatus('text-red-400', resultado.error || 'No se pudo probar.');
+                return;
+            }
+
+            setStatus('text-emerald-400', `Pruebas completadas: ${resultado.casos_pasados}/${resultado.total_casos} aprobados.`);
+            mostrarResultado(resultado);
+        } catch (e) {
+            setStatus('text-red-400', 'No se pudo conectar con el servidor.');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Probar previo a envío';
+        }
+    }
+
+    async function ejecutar() {
+        const codigo = document.getElementById('editor').value;
+        const lenguaje = document.getElementById('selector-lenguaje').value;
+        const btn = document.getElementById('btn-ejecutar');
+
+        if (!codigo.trim()) {
+            setResult('text-amber-400', 'Escribe algún código antes de ejecutar.');
+            return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = 'Evaluando...';
+        setStatus('text-amber-400', 'Ejecutando contra casos de prueba...');
+        setResult('text-slate-300', '');
+
+        try {
+            const response = await fetch('/api/submissions/test-run', {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ problema_id: PROBLEMA_ID, language: lenguaje, source_code: codigo })
+            });
+
+            if (response.status === 409) {
+                const conflicto = await response.json();
+                setStatus('text-amber-400', 'Ya hay una ejecución en curso para este usuario.');
+                setResult('text-amber-400', conflicto.error || 'Ya hay una ejecución en curso.');
+                return;
+            }
+
+            const resultado = await response.json();
+            if (!response.ok) {
+                setStatus('text-red-400', resultado.error || 'No se pudo evaluar el código.');
+                setResult('text-red-400', resultado.error || 'No se pudo evaluar el código.');
+                return;
+            }
+
+            setStatus('text-emerald-400', `Pruebas completadas: ${resultado.casos_pasados}/${resultado.total_casos} aprobados.`);
+            mostrarResultado(resultado);
+
+            const btnEnviar = document.getElementById('btn-enviar');
+            if (resultado.casos_pasados === resultado.total_casos) {
+                btnEnviar.style.display = 'inline-block';
+                btnEnviar.disabled = false;
+                btnEnviar.dataset.payload = JSON.stringify(resultado);
+            } else {
+                btnEnviar.style.display = 'none';
+            }
+        } catch (e) {
+            setStatus('text-red-400', 'No se pudo completar la evaluación.');
+            setResult('text-red-400', 'No se pudo conectar con el servidor.');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Guardar envío';
+        }
+    }
+
+    async function enviarIntento() {
+        const btn = document.getElementById('btn-enviar');
+        const payload = btn.dataset.payload ? JSON.parse(btn.dataset.payload) : null;
+
+        if (!payload) {
+            setStatus('text-red-400', 'No hay resultados para enviar.');
+            return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = 'Enviando...';
+
+        try {
+            const response = await fetch('/api/submissions/submit', {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    problema_id: PROBLEMA_ID,
+                    language: document.getElementById('selector-lenguaje').value,
+                    source_code: document.getElementById('editor').value,
+                    resultados: payload.resultado || payload.result
+                })
+            });
+
+            const data = await response.json();
+            if (!response.ok) {
+                setStatus('text-red-400', data.error || 'No se pudo enviar el intento.');
+                setResult('text-red-400', data.error || 'No se pudo enviar el intento.');
+                return;
+            }
+
+            setStatus('text-emerald-400', 'Intento enviado correctamente.');
+            setResult('text-emerald-400', 'Envío guardado: ' + (data.submission_id || 'ok'));
+            btn.style.display = 'none';
+        } catch (err) {
+            setStatus('text-red-400', 'Error enviando el intento.');
+            setResult('text-red-400', 'No se pudo conectar con el servidor.');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Enviar intento';
+        }
+    }
+
+    function mostrarResultado(resultado) {
+        if (resultado.timeout || resultado.supero_tiempo_limite) {
+            setResult('text-amber-400', 'Tiempo límite excedido. Revisa si tienes un bucle infinito.');
+            return;
+        }
+
+        if (resultado.tipo_error === 'compilacion') {
+            setResult('text-red-400', 'Error de compilación:\n\n' + (resultado.stderr || resultado.error || ''));
+            return;
+        }
+
+        if (resultado.tipo_error === 'ejecucion') {
+            setResult('text-red-400', 'Error de ejecución:\n\n' + (resultado.stderr || resultado.error || ''));
+            return;
+        }
+
+        if (resultado.tipo_error === 'sistema') {
+            setResult('text-red-400', resultado.stderr || resultado.error || 'Error de sistema');
+            return;
+        }
+
+        if (Array.isArray(resultado.resultado)) {
+            let html = '';
+            for (const caso of resultado.resultado) {
+                const ok = caso.estado === 'Aprobado';
+                const cardClass = ok
+                    ? 'border-emerald-700/60 bg-emerald-950/20'
+                    : 'border-red-700/60 bg-red-950/20';
+                const titleClass = ok ? 'text-emerald-400' : 'text-red-400';
+                const icon = ok ? 'Aprobado' : 'Fallo';
+                const etiquetaError = caso.tipo_error ? ' · ' + caso.tipo_error : '';
+
+                html += `
+                    <article class="mb-3 rounded-xl border ${cardClass} p-3">
+                        <p class="font-semibold ${titleClass}">${icon}: ${caso.descripcion || ('Caso ' + caso.caso_id)}${etiquetaError}</p>
+                        <p class="mt-1 text-xs text-slate-300">Esperado: <code>${escapeHtml(caso.esperado)}</code></p>
+                        <p class="text-xs text-slate-300">Obtenido: <code>${escapeHtml(caso.output)}</code></p>
+                    </article>`;
+            }
+            setResult('text-slate-200', html, true);
+            return;
+        }
+
+        setResult('text-emerald-400', 'Correcto:\n\n' + (resultado.stdout || resultado.output || '(sin salida)'));
+    }
+
+    function escapeHtml(str) {
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+</script>
+{% endblock %}
