@@ -74,3 +74,22 @@ def get_tipos_evento():
     tipos = ['inicio_sesion', 'cierre_sesion', 'registro',
              'envio_solucion', 'creacion_problema']
     return jsonify(tipos), 200
+
+
+def registrar_evento(tipo_evento, usuario_id, nombre_usuario, detalle):
+    """HU5: Registra un evento en la auditoría."""
+    try:
+        log = LogEvento(
+            tipo_evento=tipo_evento,
+            usuario_id=usuario_id,
+            nombre_usuario=nombre_usuario,
+            detalle=detalle,
+            fecha_hora=datetime.now()
+        )
+        from app.extensions import db
+        db.session.add(log)
+        db.session.commit()
+    except Exception as e:
+        print(f"[registrar_evento] Error: {e}")
+        import traceback
+        traceback.print_exc()

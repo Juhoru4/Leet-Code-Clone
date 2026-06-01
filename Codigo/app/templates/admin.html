@@ -23,8 +23,35 @@
         <section id="sec-auditoria" class="section hidden bg-slate-900/60 backdrop-blur-xl border border-slate-800/50 rounded-3xl p-8">
             <h2 class="font-extrabold tracking-tight text-white text-3xl">Auditoría y Trazabilidad</h2>
             <p class="mt-3 text-base text-slate-400 leading-relaxed">Registro de acciones realizadas en la plataforma por administradores y usuarios.</p>
-            <div class="mt-8 rounded-2xl border border-dashed border-slate-700 bg-slate-950/30 p-10 text-center">
-                <p class="text-slate-400">Módulo en desarrollo.</p>
+
+            <!-- RF-05.6: Filtros -->
+            <div class="card mb-8">
+                <div class="card-title">Filtros</div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div>
+                        <label class="block mb-2 text-sm text-slate-300">Usuario</label>
+                        <input type="text" id="filtro-usuario" placeholder="Buscar por usuario…" oninput="cargarLogs()" class="w-full rounded-xl border border-slate-700 bg-slate-900/50 px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block mb-2 text-sm text-slate-300">Tipo de evento</label>
+                        <select id="filtro-tipo" onchange="cargarLogs()" class="w-full rounded-xl border border-slate-700 bg-slate-900/50 px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <option value="">Todos</option>
+                            <option value="inicio_sesion">Inicio de sesión</option>
+                            <option value="cierre_sesion">Cierre de sesión</option>
+                            <option value="registro">Registro</option>
+                            <option value="envio_solucion">Envío de solución</option>
+                            <option value="creacion_problema">Creación de problema</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block mb-2 text-sm text-slate-300">Desde</label>
+                        <input type="date" id="filtro-desde" onchange="cargarLogs()" class="w-full rounded-xl border border-slate-700 bg-slate-900/50 px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block mb-2 text-sm text-slate-300">Hasta</label>
+                        <input type="date" id="filtro-hasta" onchange="cargarLogs()" class="w-full rounded-xl border border-slate-700 bg-slate-900/50 px-4 py-3 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                </div>
             </div>
 
             <!-- RF-05.5: Tabla de logs cronológica -->
@@ -51,77 +78,6 @@
                     </table>
                 </div>
             </div>
-
-            <script>
-            const TIPO_LABELS = {
-                inicio_sesion:     '🔑 Inicio de sesión',
-                cierre_sesion:     '🚪 Cierre de sesión',
-                registro:          '📝 Registro',
-                envio_solucion:    '📤 Envío de solución',
-                creacion_problema: '➕ Creación de problema',
-            };
-
-            async function cargarLogs() {
-                const tbody   = document.getElementById('logs-tbody');
-                const errorEl = document.getElementById('logs-error');
-                const counter = document.getElementById('logs-contador');
-
-                const usuario = document.getElementById('filtro-usuario').value;
-                const tipo    = document.getElementById('filtro-tipo').value;
-                const desde   = document.getElementById('filtro-desde').value;
-                const hasta   = document.getElementById('filtro-hasta').value;
-
-                const params = new URLSearchParams();
-                if (usuario) params.append('usuario', usuario);
-                if (tipo)    params.append('tipo', tipo);
-                if (desde)   params.append('desde', desde);
-                if (hasta)   params.append('hasta', hasta);
-
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--muted)">Cargando…</td></tr>';
-                errorEl.style.display = 'none';
-
-                try {
-                    const res = await fetch('/api/admin/logs?' + params.toString());
-                    if (res.status === 403) throw new Error('Sin permisos de administrador.');
-                    if (!res.ok) throw new Error('Error del servidor: ' + res.status);
-                    const logs = await res.json();
-
-                    counter.textContent = logs.length + ' registro(s)';
-
-                    if (logs.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--muted)">No hay registros con ese filtro.</td></tr>';
-                        return;
-                    }
-
-                    tbody.innerHTML = logs.map((log, i) => {
-                        const fecha = log.fecha_hora
-                            ? new Date(log.fecha_hora).toLocaleString('es-CO')
-                            : '—';
-                        const tipoLabel = TIPO_LABELS[log.tipo_evento] || log.tipo_evento;
-                        return `
-                            <tr style="border-bottom:1px solid var(--border)">
-                                <td style="padding:0.75rem 1rem;color:var(--muted);font-size:0.85rem">${log.id}</td>
-                                <td style="padding:0.75rem 1rem;font-size:0.85rem;white-space:nowrap">${fecha}</td>
-                                <td style="padding:0.75rem 1rem;font-size:0.85rem">${log.nombre_usuario || '—'}</td>
-                                <td style="padding:0.75rem 1rem;font-size:0.85rem">${tipoLabel}</td>
-                                <td style="padding:0.75rem 1rem;font-size:0.82rem;color:var(--muted)">${log.detalle || '—'}</td>
-                            </tr>`;
-                    }).join('');
-
-                } catch (err) {
-                    errorEl.textContent = 'No se pudo cargar el historial: ' + err.message;
-                    errorEl.style.display = 'block';
-                    tbody.innerHTML = '';
-                    counter.textContent = '';
-                }
-            }
-
-            // Cargar logs automáticamente cuando se abre la sección
-            document.addEventListener('DOMContentLoaded', () => {
-                const btn = document.querySelector('[onclick="showSection(\'auditoria\')"]');
-                if (btn) btn.addEventListener('click', cargarLogs);
-            });
-            </script>
         </section>
 
         <section id="sec-problemas" class="section space-y-6">
@@ -260,6 +216,13 @@
 <div id="toast" class="fixed bottom-6 right-6 hidden rounded-xl px-5 py-3 text-sm font-semibold shadow-2xl z-50"></div>
 
 <script>
+    function escapeHtml(str) {
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+    }
+
     function showSection(id, clicked) {
         document.querySelectorAll('.section').forEach((s) => s.classList.add('hidden'));
         document.querySelectorAll('.nav-item').forEach((n) => {
@@ -296,6 +259,76 @@
             cargarListaProblemas();
         }
     }
+
+    // ── AUDITORÍA - CARGAR LOGS ──
+    const TIPO_LABELS = {
+        inicio_sesion:     '🔑 Inicio de sesión',
+        cierre_sesion:     '🚪 Cierre de sesión',
+        registro:          '📝 Registro',
+        envio_solucion:    '📤 Envío de solución',
+        creacion_problema: '➕ Creación de problema',
+    };
+
+    async function cargarLogs() {
+        const tbody   = document.getElementById('logs-tbody');
+        const errorEl = document.getElementById('logs-error');
+        const counter = document.getElementById('logs-contador');
+
+        const usuario = document.getElementById('filtro-usuario').value;
+        const tipo    = document.getElementById('filtro-tipo').value;
+        const desde   = document.getElementById('filtro-desde').value;
+        const hasta   = document.getElementById('filtro-hasta').value;
+
+        const params = new URLSearchParams();
+        if (usuario) params.append('usuario', usuario);
+        if (tipo)    params.append('tipo', tipo);
+        if (desde)   params.append('desde', desde);
+        if (hasta)   params.append('hasta', hasta);
+
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--muted)">Cargando…</td></tr>';
+        errorEl.style.display = 'none';
+
+        try {
+            const res = await fetch('/api/admin/logs?' + params.toString());
+            if (res.status === 403) throw new Error('Sin permisos de administrador.');
+            if (!res.ok) throw new Error('Error del servidor: ' + res.status);
+            const logs = await res.json();
+
+            counter.textContent = logs.length + ' registro(s)';
+
+            if (logs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--muted)">No hay registros con ese filtro.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = logs.map((log, i) => {
+                const fecha = log.fecha_hora
+                    ? new Date(log.fecha_hora).toLocaleString('es-CO')
+                    : '—';
+                const tipoLabel = TIPO_LABELS[log.tipo_evento] || log.tipo_evento;
+                return `
+                    <tr style="border-bottom:1px solid var(--border)">
+                        <td style="padding:0.75rem 1rem;color:var(--muted);font-size:0.85rem">${log.id}</td>
+                        <td style="padding:0.75rem 1rem;font-size:0.85rem;white-space:nowrap">${fecha}</td>
+                        <td style="padding:0.75rem 1rem;font-size:0.85rem">${log.nombre_usuario || '—'}</td>
+                        <td style="padding:0.75rem 1rem;font-size:0.85rem">${tipoLabel}</td>
+                        <td style="padding:0.75rem 1rem;font-size:0.82rem;color:var(--muted)">${log.detalle || '—'}</td>
+                    </tr>`;
+            }).join('');
+
+        } catch (err) {
+            errorEl.textContent = 'No se pudo cargar el historial: ' + err.message;
+            errorEl.style.display = 'block';
+            tbody.innerHTML = '';
+            counter.textContent = '';
+        }
+    }
+
+    // Cargar logs automáticamente cuando se abre la sección
+    document.addEventListener('DOMContentLoaded', () => {
+        const btn = document.querySelector('[onclick="showSection(\'auditoria\', this)"]');
+        if (btn) btn.addEventListener('click', cargarLogs);
+    });
 
     document.getElementById('esta_activo').addEventListener('change', function () {
         document.getElementById('toggle-label-text').textContent = this.checked ? 'Activo' : 'Inactivo';
