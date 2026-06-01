@@ -154,6 +154,15 @@ def test_run():
 
     # Guardar todo en DB
     db.session.commit()
+    
+    # HU5: registrar envío de solución
+    from routes.auditoria import registrar_evento
+    registrar_evento(
+        tipo_evento='envio_solucion',
+        usuario_id=str(envio.usuario_id) if hasattr(envio, 'usuario_id') else None,
+        nombre_usuario=None,
+        detalle=f'Problema: {problema_id} | Lenguaje: {lenguaje} | Casos pasados: {casos_pasados}/{len(casos)}'
+    )
 
     # Respuesta final que consume el frontend para pintar el resultado.
     return jsonify({

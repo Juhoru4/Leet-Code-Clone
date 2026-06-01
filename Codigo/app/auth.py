@@ -8,6 +8,7 @@ from app.extensions import db
 from models import Usuario
 from datetime import datetime
 from sqlalchemy.exc import IntegrityError
+from services.auditoria.auditoria import registrar_evento  # HU5
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
 
@@ -177,6 +178,14 @@ def register():
     except Exception as e:
         current_app.logger.warning('Auto-login after registration failed: %s', str(e))
 
+    # RF-05.1: registrar evento de nuevo registro
+    registrar_evento(
+        tipo_evento='registro',
+        usuario_id=user_id,
+        nombre_usuario=username,
+        detalle=f'Nuevo usuario registrado con rol: {role}'
+    )
+
     return jsonify({'ok': True, 'user_id': user_id, 'auto_login': False}), 201
 
 
@@ -231,6 +240,14 @@ def login():
     if perfil and perfil.rol == 'admin':
         redirect_url = '/auth/admin/ui'
 
+    # RF-05.1: registrar inicio de sesion
+    registrar_evento(
+        tipo_evento='inicio_sesion',
+        usuario_id=user_id,
+        nombre_usuario=perfil.nombre_usuario if perfil else email,
+        detalle=f'Inicio de sesion exitoso. Rol: {perfil.rol if perfil else "desconocido"}'
+    )
+
     resp = make_response(redirect(redirect_url))
 
     secure_cookie = request.is_secure
@@ -258,6 +275,23 @@ def login():
 
 @bp.route('/logout', methods=['POST'])
 def logout():
+    # RF-05.1: registrar cierre de sesion
+    token = request.cookies.get('access_token')
+    try:
+        if token:
+            user_response = admin_client.auth.get_user(token)
+            user = getattr(user_response, 'user', user_response)
+            user_dict = _to_dict(user)
+            uid = user_dict.get('id') if isinstance(user_dict, dict) else None
+            perfil = Usuario.query.get(uid) if uid else None
+            registrar_evento(
+                tipo_evento='cierre_sesion',
+                usuario_id=uid,
+                nombre_usuario=perfil.nombre_usuario if perfil else 'Desconocido',
+                detalle='Cierre de sesion'
+            )
+    except Exception:
+        pass
     # Clear auth cookies
     resp = make_response(jsonify({'ok': True}))
     resp.set_cookie('access_token', '', expires=0, httponly=True, path='/')

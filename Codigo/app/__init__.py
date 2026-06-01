@@ -45,5 +45,12 @@ def create_app(database_uri=None):
         app.register_blueprint(submissions_bp, url_prefix="/api/submissions")
     except Exception as e:
         print(f"Error registrando envios blueprint: {e}")
+        
+# Auditoría
+    try:
+        from routes.auditoria import auditoria_bp
+        app.register_blueprint(auditoria_bp)
+    except Exception as e:
+        print(f"Error registrando auditoria blueprint: {e}")
 
     return app
